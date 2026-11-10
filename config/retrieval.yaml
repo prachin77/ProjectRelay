@@ -1,0 +1,65 @@
+# ---------------------------------------------------------------------------
+# Retrieval presets — the three settings required by Table 3 of the brief.
+#
+# Each preset controls three independent things:
+#   chunk_words / overlap_words : how the papers are split ("piece size")
+#   top_k                       : how many pieces are fetched
+#   rerank                      : whether a cross-encoder re-orders the
+#                                 fused candidate list ("re-ranking")
+#
+# WHY WORDS AND NOT TOKENS?
+#   Token counts depend on which tokenizer you ask. The embedding tokenizer,
+#   the Groq tokenizer and the chunk-size tokenizer are three different
+#   things, so "token" would be an ambiguous unit in a config file. Words are
+#   unambiguous and stable. The generation prompt's real token cost is
+#   measured separately with a local estimator before each call.
+#
+# WHY DOES `extensive` USE *SMALLER* CHUNKS?
+#   This is the counter-intuitive part, and it is a hypothesis we will test
+#   rather than assert. The binding budget is TPM = 8,000 tokens/minute, so
+#   "retrieve more" cannot mean "paste more text". It has to mean "retrieve
+#   more precise granules and let the reranker pick". If Table 3 shows this
+#   is wrong, the report says so and `balanced` becomes the answer. Both
+#   outcomes are acceptable; only an unmeasured claim is not.
+# ---------------------------------------------------------------------------
+
+# Candidate pool size before reranking. The reranker can only promote what
+# fusion already put in the pool, so the pool must be wider than top_k.
+fusion_pool: 30
+
+# Reciprocal Rank Fusion constant. 60 is the value from the original RRF
+# paper; it damps the influence of any single retriever's top hit.
+rrf_k: 60
+
+presets:
+
+  light:
+    description: >
+      Cheapest setting. Big chunks, few of them, no reranker. Lowest prefill
+      tokens, lowest time-to-first-token. Expected to lose on multi-part
+      questions where the answer is spread across two sections.
+    chunk_words: 700
+    overlap_words: 60
+    top_k: 3
+    rerank: false
+
+  balanced:
+    description: >
+      Default. Medium chunks, moderate k, reranker on. The reranker is the
+      main quality lever here: it costs ~10-25 ms on CPU and no API tokens,
+      because reranking is local.
+    chunk_words: 450
+    overlap_words: 80
+    top_k: 5
+    rerank: true
+
+  extensive:
+    description: >
+      Broadest evidence collection. Small granules, many of them, reranked.
+      Used for multi-part questions and as the expensive end of the
+      quality/cost curve. This is also the tier that gets downgraded first
+      when the daily budget runs low.
+    chunk_words: 300
+    overlap_words: 120
+    top_k: 9
+    rerank: true

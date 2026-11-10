@@ -1,0 +1,38 @@
+# ---------------------------------------------------------------------------
+# The Relay — runtime dependencies (pinned to major versions only)
+#
+# Deliberately small. Every entry here earns its place:
+#
+#   pypdf            PDF text extraction. Pure Python, no native build.
+#   pydantic         Typed configuration + request/response schemas.
+#   pydantic-settings  Loads config from environment / .env with validation.
+#   pyyaml           Human-editable experiment + retrieval config files.
+#   httpx            Async HTTP client for the Groq adapter (and the
+#                    stand-in's optional HTTP mode).
+#   redis            redis-py client, used with asyncio.
+#   fastembed        ONNX-based embeddings + cross-encoder reranking.
+#                    Chosen over sentence-transformers because it needs no
+#                    PyTorch (~2.5 GB on Windows) for the same job.
+#   rank-bm25        Classic lexical retrieval. Technical papers contain
+#                    exact tokens ("QK^T", "Mimi", "H-Net") that dense
+#                    embeddings blur, so we need both retrievers.
+#   numpy            Vector maths.
+#   fastapi+uvicorn  Thin HTTP surface so the load generator can drive the
+#                    pipeline over the network rather than in-process.
+#   pytest           Unit + integration tests.
+#   pytest-asyncio   Tests for async code paths.
+# ---------------------------------------------------------------------------
+
+pypdf>=5.0,<8
+pydantic>=2.7,<3
+pydantic-settings>=2.3,<3
+pyyaml>=6.0,<7
+httpx>=0.27,<1
+redis>=5.0,<7
+fastembed>=0.4,<1
+rank-bm25>=0.2.2,<1
+numpy>=1.26,<3
+fastapi>=0.111,<1
+uvicorn>=0.30,<1
+pytest>=8.2,<9
+pytest-asyncio>=0.23,<1
