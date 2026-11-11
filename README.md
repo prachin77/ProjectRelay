@@ -168,7 +168,42 @@ never calls Groq.
 
 ---
 
+## Results journey (what changed and why)
+
+The project was built incrementally. Each change below moved a measured number;
+the previous value is kept so the progression is visible.
+
+| Change | Why | Before | After |
+|---|---|---|---|
+| Grader: refusal checked before facts | An answer with all facts plus an honest caveat was graded `refused_wrongly` | A03, A04, M01, D01 graded `refused_wrongly` despite containing required facts | Facts decide the grade first; refusal only marks `refused_wrongly` when facts are missing |
+| Grader: unicode hyphen normalisation | Groq emits non-breaking hyphens (U+2011); `Encoder-decoder` failed to match `encoder-decoder` | Real run: 12 correct, 7 refused_wrongly, 4 refused_correctly | Re-grade: 14 correct, 5 refused_wrongly, 4 refused_correctly (A04, M01 flipped) |
+| Stand-in calibration (base_latency 850→810, ttft 0.35→0.77, stream_chunk 20→0) | Provisional values pre-dated any real measurement | Stand-in TTFT ~300 ms (unrealistic) | Stand-in TTFT ~620 ms (matches real median 703 ms) |
+| Deadline unit fix (ms→s) | `deadline_mono` was in ms but compared to `time.monotonic()` in s | 4 real requests rejected as `rate_limited` despite having quota | All 23 real questions completed with `status=ok` |
+| Zero-wait boundary fix | `wait_s==0` at rolling-window boundary raised instead of re-checking | 4 admissible requests rejected | Re-check succeeds |
+| Scheduler `max_queue_depth=0` fix | `_waiting >= 0` rejected the first request even with a free worker | `test_full_queue_is_rejected_immediately` failed | Test passes; first request admitted |
+| Out-of-scope `retrieval_setting` fix | Scope refusals wrote `"none"`, creating a phantom Table 3 row | Table 3 had 4 settings (light/balanced/extensive/none) | Table 3 has 3 settings; U01 counted under its preset |
+| Real quality deadline 60s→120s | TPM pacing: 4th call waits ~58 s; 60 s deadline expired during normal pacing | 1 timeout in v2 run | 0 timeouts in v4 run (724.1 s wall clock) |
+
+The raw measurements (128 rows) are in `logs/results.csv` and exported to `results.csv`.
+Every table in `reports/REPORT.md` is recomputable from that file via `metrics --export`.
+
 ## Honest limitations
+
+- Retrieval is lexical (BM25 + TF-IDF), not neural. Paraphrased questions can
+  miss a passage that a human would find.
+- The evidence gate is a heuristic, not entailment. It can produce a false
+  refusal or accept a passage that merely shares vocabulary.
+- The deterministic verifier checks citation existence and lexical support. It
+  cannot prove that a cited sentence entails a claim.
+- The stand-in is an extractive baseline. Its quality numbers describe the
+  pipeline, not a language model.
+- The exact cache is in-process, so it is lost on restart and not shared
+  between workers.
+- Real Groq quality latencies include admission waiting for the shared TPM
+  window; they are not directly comparable to stand-in latencies.
+
+See `PROJECT_JOURNAL.md` for the full engineering record, including failed
+experiments and the reasoning behind each design decision.
 
 * Retrieval is lexical (BM25 + TF-IDF), not neural. Paraphrased questions can
   miss a passage that a human would find.

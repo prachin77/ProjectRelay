@@ -680,6 +680,12 @@ wrong=0. Real rows merged into `logs/results.csv` (128 total) via
 `scripts/merge_results.py`; `metrics --export` regenerated root `results.csv`;
 `reconcile` reports 0 mismatches.
 
+After grader softening (unicode hyphen normalisation, commit fce3ff1):
+re-grading the same answers flips A04 and M01 from refused_wrongly to correct:
+correct=14, refused_wrongly=5, refused_correctly=4, wrong=0. The raw CSV retains
+the original 12/7/4 grades (measured at run time); the re-grade is the
+post-hoc improvement.
+
 | Setting | Source | Questions | Correct | Wrong | Refused correctly | Refused wrongly | Tokens/answer | TTFT p50/p95 ms |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
 | balanced | real | 23 | 12 (52.2%) | 0 (0.0%) | 4 (17.4%) | 7 (30.4%) | 2,802.8 | 1,516 / 58,281 |

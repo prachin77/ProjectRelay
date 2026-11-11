@@ -130,6 +130,12 @@ Real Groq never fabricated a wrong fact (0 wrong), but it refused 7 answerable
 questions (refused_wrongly) versus 0 for the stand-in — the real model is more
 cautious. TTFT p95 (58,281 ms) is admission-wait dominated, not generation.
 
+After the grader softening (unicode hyphen normalisation, committed in fce3ff1),
+re-grading the same answers flips A04 and M01 from refused_wrongly to correct:
+14 correct, 5 refused_wrongly, 4 refused_correctly. The raw CSV grades (12/7/4)
+are retained as the measured-at-run-time values; the re-grade is the post-hoc
+improvement.
+
 A number we could not have guessed without running it: real TTFT is 77% of
 total latency on average, and the fourth call in a minute waits ~44–58 s purely
 for the TPM window to reset — invisible in per-call latency.
