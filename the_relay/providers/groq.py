@@ -134,6 +134,9 @@ class GroqProvider(ModelProvider):
             "max_tokens": request.max_tokens,
             "temperature": request.temperature,
             "stream": True,
+            # gpt-oss is a reasoning model; keep the hidden reasoning short so
+            # the visible, evidence-grounded answer is not starved of tokens.
+            "reasoning_effort": self.settings.groq_reasoning_effort,
             # Ask for usage in the final SSE chunk. If the provider ignores it,
             # we fall back to the documented estimate and mark it as estimated.
             "stream_options": {"include_usage": True},

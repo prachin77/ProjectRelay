@@ -61,6 +61,7 @@ from the_relay.core.tokens import estimate_messages_tokens
 from the_relay.core.verify import (
     build_partial_answer,
     extract_citation_ids,
+    normalise_citation_brackets,
     parse_llm_verification,
     resolve_citations,
     split_sentences,
@@ -75,7 +76,6 @@ from the_relay.errors import (
     RateLimitError,
     RelayError,
 )
-from the_relay.obs.results_csv import ResultsWriter
 from the_relay.obs.traces import (
     ModelCallWriter,
     TraceWriter,
@@ -201,9 +201,10 @@ class Relay:
             self.settings.resolved(self.settings.logs_dir) / "model_calls.jsonl",
             enabled=model_call_log_enabled,
         )
-        self.results_writer = ResultsWriter(
-            self.settings.resolved(self.settings.logs_dir) / "results.csv"
-        )
+        # NOTE: this class deliberately has no results writer. One row per user
+        # request is written by the experiment runner / CLI harness, which owns
+        # grading and file lifecycle. Writing here as well would produce two
+        # rows for one request and break the CSV contract.
         # Compute the corpus identity once per preset. It is part of every
         # cache key; doing it per request would re-hash the PDFs unnecessarily.
         self._corpus_versions = {
@@ -240,7 +241,12 @@ class Relay:
         start_mono = monotonic_ms()
         start_time = utc_now_iso()
         deadline_ms = deadline_ms or self.settings.request_deadline_ms
-        deadline_mono = start_mono + deadline_ms
+        # UNIT CONTRACT: latency is measured in milliseconds (``monotonic_ms``)
+        # but admission control and the scheduler use ``time.monotonic()``
+        # seconds. Mixing the two silently produced a 90-million-second
+        # deadline in a real run, which turned ordinary TPM pacing into
+        # instant quota rejections. Keep this conversion explicit.
+        deadline_mono = time.monotonic() + (deadline_ms / 1000.0)
 
         state = RequestState(request_start_mono=start_mono)
         normalized = normalize_question(question)
@@ -314,7 +320,11 @@ class Relay:
             result.answer = scope_refusal(decision)
             result.refusal_reason = f"scope:{decision.matched_rule}"
             result.evidence_level = "out_of_scope"
-            result.retrieval_setting = "none"
+            # Record the preset the request was *made under*, not "none".
+            # Table 3 groups by this column; writing "none" created a phantom
+            # fourth retrieval setting containing only out-of-scope refusals,
+            # and silently removed those questions from every real preset.
+            result.retrieval_setting = preset.name
             self._finalize(result, state, start_mono)
             self.trace.log(
                 request_id,
@@ -684,7 +694,7 @@ class Relay:
             )
             return result
 
-        answer = outcome.response.text.strip()
+        answer = normalise_citation_brackets(outcome.response.text.strip())
         if not answer:
             answer = (
                 "The model returned an empty answer. I have not filled the gap "
@@ -764,7 +774,7 @@ class Relay:
                 break
             if regen_outcome.response is None or not regen_outcome.response.text.strip():
                 break
-            answer = regen_outcome.response.text.strip()
+            answer = normalise_citation_brackets(regen_outcome.response.text.strip())
             verification = self._verify(request_id, state, answer, chunks)
             self.trace.log(
                 request_id,

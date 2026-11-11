@@ -102,7 +102,7 @@ class BoundedScheduler:
             self._rejected += 1
             raise QueueFullError("queue is disabled and all workers are busy")
 
-        if self._waiting >= self.max_queue_depth:
+        if self.max_queue_depth > 0 and self._waiting >= self.max_queue_depth:
             self._rejected += 1
             raise QueueFullError(
                 f"queue is full ({self.max_queue_depth} waiting); rejecting "

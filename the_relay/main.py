@@ -305,7 +305,8 @@ def command_metrics(args: argparse.Namespace) -> int:
         print("\nTable 3 — retrieval settings")
         for row in payload["table_3"]:
             print(
-                f"  {row['retrieval_setting']:<10} n={row['questions_asked']:<3} "
+                f"  {row['retrieval_setting']:<10} {row.get('source', ''):<9} "
+                f"n={row['questions_asked']:<3} "
                 f"correct+cited={row['correct_and_cited_pct']}% "
                 f"wrong={row['wrong_pct']}% "
                 f"refused_correctly={row['correctly_refused_pct']}% "

@@ -142,13 +142,12 @@ def explain_grade(
             cited=cited,
         )
 
-    if refused:
-        return GradeExplanation(
-            grade="refused_wrongly",
-            reason="the question is answerable but the assistant refused",
-            cited=cited,
-        )
-
+    # For an answerable question, the facts decide the grade -- not the
+    # presence of a caveat. A good answer often ends with "the papers do not
+    # provide the rest"; that is honesty, not a refusal. An earlier version
+    # checked refusal *first* and misgraded those answers as
+    # ``refused_wrongly``. We now check facts first and only treat a refusal
+    # as decisive when the facts are missing.
     matched: list[str] = []
     missing: list[str] = []
     for group in question.required_all:
@@ -158,6 +157,17 @@ def explain_grade(
             missing.append(" | ".join(group))
 
     if missing:
+        if refused:
+            return GradeExplanation(
+                grade="refused_wrongly",
+                reason=(
+                    "the question is answerable but the answer lacks required "
+                    "evidence and contains a refusal"
+                ),
+                matched_groups=tuple(matched),
+                missing_groups=tuple(missing),
+                cited=cited,
+            )
         return GradeExplanation(
             grade="wrong",
             reason="the answer is missing required evidence",

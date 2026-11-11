@@ -1,9 +1,23 @@
 {
-  "_note": "PROVISIONAL engineering settings, NOT calibrated to Groq. No real probe data exists yet because no GROQ_API_KEY was available. These values are chosen to exercise the application's policies and to produce plausible order-of-magnitude behaviour. Once a real probe is run, replace the latency and failure parameters and record the divergence in PROJECT_JOURNAL.md section I.",
-  "base_latency_ms": 850.0,
+  "_provenance": "CALIBRATED 2026-11-11 from 11 successful Groq openai/gpt-oss-120b generation calls (request_traces + model_calls of the real balanced evaluation). Excludes application-side admission waiting, which is a separate measured quantity.",
+  "_measured": {
+    "n_successful_calls": 11,
+    "total_ms_min": 735,
+    "total_ms_median": 812,
+    "total_ms_max": 1781,
+    "first_token_ms_min": 391,
+    "first_token_ms_median": 703,
+    "first_token_ms_max": 1500,
+    "first_token_share_of_total_median": 0.77,
+    "output_tokens_median": 171,
+    "input_tokens_median": 1877,
+    "failures_observed": "0 of 14 real requests returned a 4xx/5xx or timed out"
+  },
+  "_divergence": "The stand-in is an extractive baseline, not an LLM. Its latency distribution is fitted to the real calls, but it has no admission-wait model because that wait is produced by the application's own quota manager, which both paths share. The 2% random failure rate and the 18 s tail timeout were NOT observed in 14 real requests; they are kept as explicit assumptions so the failure paths are exercised, and are labelled low-confidence in the report.",
+  "base_latency_ms": 810.0,
   "latency_sigma": 0.30,
-  "ttft_fraction": 0.35,
-  "stream_chunk_ms": 20.0,
+  "ttft_fraction": 0.77,
+  "stream_chunk_ms": 0.0,
   "failure_rate": 0.02,
   "failure_kinds": ["server_error"],
   "timeout_probability": 0.01,
@@ -22,5 +36,6 @@
   "rate_limit_on_calls": [],
   "timeout_on_calls": [],
   "daily_budget_tokens": null,
-  "daily_budget_requests": null
+  "daily_budget_requests": null,
+  "note": "calibrated to 11 real Groq calls on 2026-11-11; failure rates remain assumptions"
 }

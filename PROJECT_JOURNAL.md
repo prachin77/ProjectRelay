@@ -469,29 +469,81 @@ claim that a free request was charged. [DOC] + [EST]
 
 ## H. Real Groq experiment history
 
-| Experiment | Date | Model | Requests | Rate | Concurrency | Result |
-|---|---|---|---|---|---|---|
-| Probe | — | — | — | — | — | **Blocked: no API key** |
+All real requests used `openai/gpt-oss-120b` on the free tier through
+`https://api.groq.com/openai/v1`, with `RELAY_GROQ_REASONING_EFFORT=low`.
+Timestamps are UTC.
 
-No real request has been sent. Nothing in this journal claims otherwise.
+| Experiment | Date | Requests | Concurrency | Result |
+|---|---|---|---|---|
+| `probe --requests 3` | 2026-11-11 06:12 | 3 | 1 | 3/3 HTTP 200. Totals 891 / 359 / 563 ms. 86 input + 8 output tokens each. Headers: `limit-requests: 1000`, `limit-tokens: 8000`; remaining tokens 7906 → 7898 → 7849; remaining requests 999 → 997. |
+| Single `ask` (A01) | 2026-11-11 06:20 | 1 | 1 | Verified answer with `[S1]`, 2,110 in / 59 out, TTFT 782 ms, total 875 ms. |
+| Real balanced quality run (v1/v2) | 2026-11-11 06:14–06:29 | 10 written rows | 1 | **Aborted.** Four requests were rejected by the app-side quota manager because of a milliseconds/seconds deadline bug, and one timed out at the 60 s harness deadline during normal TPM pacing. Fixed; see L. |
+| Real balanced quality run (v3) | 2026-11-11 06:31 onward | 23 planned | 1 | See section J for the final table. |
+
+### H.1 What the real headers actually report
+
+```text
+x-ratelimit-limit-requests: 1000
+x-ratelimit-limit-tokens:   8000
+x-ratelimit-remaining-requests / -tokens
+x-ratelimit-reset-requests / -tokens
+```
+
+The headers confirm the **documented** per-minute token limit of 8,000 and a
+**1,000 requests per day** budget. They do **not** expose a per-minute request
+limit directly; 30 RPM is documentation only. No `429` was observed in this
+session, so the direct 429 body and the true recovery time are **not measured**.
+
+### H.2 The one number that matters most
+
+With a ~1,900–2,200 token prompt, the 8,000 TPM window admits only three calls
+per minute. The fourth call waits **44–58 s** for `x-ratelimit-reset-tokens`.
+That is the dominant cost of a real quality run, and it is invisible in the
+provider's per-call latency (median 812 ms total).
 
 ---
 
 ## I. Stand-in calibration history
 
-The stand-in's parameters are **provisional engineering settings**, not calibration to
-Groq. No real observations exist to calibrate against. The file
-`config/standin_calibration.json` is labelled accordingly.
+### I.1 First calibration (2026-11-11, after the real probe)
 
-- **Real measurements used:** none.
-- **Simulated parameters:** see `config/standin_calibration.json`.
-- **Calibration method:** none yet; values chosen to produce plausible order-of-magnitude
-  behaviour and to exercise the application's policies.
-- **Random seed:** 42 by default.
-- **Known inaccuracies:** no semantic variance, no real tokenizer, no provider-side
-  queueing, no real model quality, no exact Groq latency distribution.
-- **Update rule:** once real probe data exists, replace the provisional latency and failure
-  parameters and record the divergence table here.
+The stand-in was originally written before any key existed, so its parameters
+were labelled provisional. It is now calibrated against **11 successful real
+generation calls**, excluding application-side admission waiting.
+
+| Parameter | Provisional | Calibrated | Evidence |
+|---|---|---|---|
+| `base_latency_ms` | 850 | **810** | Real total median 812 ms (n=11, min 735, max 1,781) |
+| `latency_sigma` | 0.30 | 0.30 (kept) | Real max/median = 2.19, consistent with a log-normal σ of 0.30 |
+| `ttft_fraction` | 0.35 | **0.77** | Real median TTFT share 703/812 = 0.77 (range 0.53–0.93) |
+| `stream_chunk_ms` | 20 | **0** | After TTFT, the real stream finishes in ~0.1 s; a fixed 20 ms per 3-word piece added ~0.7 s of invented latency per answer |
+| `failure_rate` | 0.02 | 0.02 (kept, **assumption**) | 0 failures in 14 real requests. Too few observations to estimate a rate; 2% is kept to exercise the path and is labelled low-confidence |
+| `timeout_probability` | 0.01 | 0.01 (kept, **assumption**) | No real timeout observed |
+| `rpm / tpm / rpd / tpd` | 30 / 8000 / 1000 / 200000 | unchanged | TPM and RPD confirmed by live headers; RPM and TPD are documentation only |
+
+### I.2 Where the stand-in still differs most
+
+1. **It is not an LLM.** It is a deterministic extractive selector. Its answers
+   are quotations, so it cannot paraphrase, and its error mode is "quoted the
+   wrong sentence", not "invented a fact".
+2. **No admission-wait model.** The 44–58 s TPM wait is produced by the
+   application's quota manager, which both providers share. The stand-in does
+   not reproduce the provider's own internal queueing (not observed anyway).
+3. **No tokenizer agreement.** Token counts come from a local estimator, not
+   Groq's tokenizer, so stand-in `tokens_in/out` are approximate.
+4. **No real quality distribution.** Stand-in quality measures the retrieval and
+   verification pipeline, not a model.
+
+### I.3 Known inaccuracies
+
+- No semantic variance between paraphrases.
+- No provider-side concurrency queue.
+- Failure rates are assumptions, not measurements.
+
+### I.4 Update rule
+
+Any new real observation replaces the corresponding value here and in
+`config/standin_calibration.json`, with the raw row cited.
 
 ---
 
@@ -520,9 +572,140 @@ report.
 - **Fix:** detect lines repeated on ≥30% of pages and remove them before chunking;
   strip page-number-only lines.
 - **Regression test:** `tests/test_ingest.py::test_running_header_is_removed`.
-- **Outcome:** pending test run.
+- **Outcome:** fixed, test passes.
 - **Remaining risk:** a legitimate repeated sentence could be removed if it appears on
   ≥30% of pages. The detector only removes short lines (<120 chars) that repeat exactly.
+
+### BUG-002 — Real quality run rejected admissible requests (deadline unit mismatch)
+
+- **Discovered:** during real balanced quality run v1/v2 (2026-11-11). Four requests
+  were rejected `rate_limited` despite the account having quota.
+- **Root cause:** `pipeline.ask` built `deadline_mono` in **milliseconds** while
+  `QuotaManager.acquire` and `BoundedScheduler` compare against `time.monotonic()`
+  in **seconds**. The logged deadline was ~90 million seconds, so the manager saw no
+  time pressure and could not pace calls into the TPM window.
+- **Fix:** convert explicitly: `deadline_mono = time.monotonic() + deadline_ms / 1000.0`.
+- **Regression test:** `tests/test_quota.py`.
+
+### BUG-003 — Real quality run rejected requests at the rolling-window boundary
+
+- **Discovered:** same real run as BUG-002. `try_acquire` returned `wait_s == 0.0`
+  at the exact 60-second boundary (an event still counted by inclusive `>=` but about
+  to fall out). `acquire` treated `wait_s <= 0` as a hard failure, rejecting four
+  admissible requests.
+- **Fix:** when `wait_s <= 0`, sleep briefly and re-check instead of raising.
+- **Regression test:** `tests/test_quota.py::test_zero_wait_boundary_is_retried_not_rejected`.
+
+### BUG-004 — Double-counted in-flight token reservations
+
+- **Discovered:** code review of `QuotaManager.try_acquire`. In-flight reservations
+  were already recorded in `_token_events`, but `try_acquire` added
+  `_reserved_tokens` on top when checking per-minute and per-day token limits.
+- **Fix:** removed the `+ self._reserved_tokens` term; `_token_events` counts them once.
+- **Regression test:** `tests/test_quota.py::test_release_reconciles_estimate_with_actual_usage`.
+
+### BUG-005 — Grader marked correct answers as refusals
+
+- **Discovered:** manual re-grade of stand-in answers with honest caveats
+  ("the papers do not provide ... e.g. ..., ").
+- **Root cause:** `eval/grader.py` checked refusal phrases before required facts, so
+  "BLEU was 28.4 [S1]. The papers do not provide X." was graded `refused_wrongly`.
+- **Fix:** facts decide an answerable question's grade first; a refusal only yields
+  `refused_wrongly` when required facts are missing.
+- **Regression test:** `tests/test_grader.py::test_correct_answer_with_caveat_is_still_correct`.
+
+### BUG-006 — Full-width citation brackets caused a false verification failure
+
+- **Discovered:** real Groq run v1; Groq emitted `【S1】` (full-width brackets).
+- **Root cause:** `verify_answer` only recognised ASCII `[S1]`.
+- **Fix:** `normalise_citation_brackets` maps U+3010/U+3011 full-width brackets to
+  ASCII before verification.
+- **Regression test:** `tests/test_verify.py::test_full_width_citation_brackets_are_normalised`.
+
+### BUG-007 — Daily reset returned 0.0 when only tokens were preconsumed
+
+- **Discovered:** `daily_exhausted` scenario reported "next capacity in 0.0s".
+- **Root cause:** `_day_reset_s` looked only at request timestamps, ignoring token
+  events from `preconsume`.
+- **Fix:** reset calculations consider both request and token event timestamps.
+- **Regression test:** `tests/test_quota.py::test_daily_token_limit_is_reported_separately`.
+
+### BUG-008 — Scheduler rejected the first request when `max_queue_depth=0`
+
+- **Discovered:** test `test_full_queue_is_rejected_immediately`.
+- **Root cause:** `_waiting >= self.max_queue_depth` is `0 >= 0` = true even when a
+  worker is free.
+- **Fix:** only enforce the queue cap when `max_queue_depth > 0`.
+- **Regression test:** `tests/test_scheduler.py`.
+
+### BUG-009 — Out-of-scope refusal recorded `retrieval_setting="none"`
+
+- **Discovered:** canonical stand-in Table 3 showed a phantom `none` setting with 3
+  rows and silently removed those questions from every real preset.
+- **Root cause:** `pipeline.ask` set `retrieval_setting="none"` for scope refusals
+  instead of the preset the request was made under.
+- **Fix:** record `preset.name` for scope refusals so Table 3 groups correctly.
+- **Regression test:** `tests/test_metrics.py::test_out_of_scope_refusal_records_the_requested_preset`.
+
+---
+
+## J. Experiment results
+
+Canonical stand-in runs (2026-11-11, `config/standin_calibration.json` calibrated to
+11 real Groq calls; `logs/results.csv` + root `results.csv`):
+
+| Scenario | Source | Requests | ok | rate_limited | timeout | error |
+|---|---|---|---:|---:|---:|---:|
+| steady | stand-in | 6 | 6 | 0 | 0 | 0 |
+| burst | stand-in | 8 | 2 | 6 | 0 | 0 |
+| overload | stand-in | 12 | 2 | 2 | 0 | 8 |
+| reduced_quota | stand-in | 6 | 1 | 0 | 0 | 5 |
+| daily_exhausted | stand-in | 4 | 0 | 4 | 0 | 0 |
+
+Quality runs (one question at a time), all statuses `ok`:
+
+| Setting | Source | Questions | Correct | Wrong | Refused correctly | Refused wrongly |
+|---|---|---:|---:|---:|---:|---:|
+| light | stand-in | 22 | 11 (50.0%) | 8 (36.4%) | 3 (13.6%) | 0 |
+| balanced | stand-in | 22 | 13 (59.1%) | 6 (27.3%) | 3 (13.6%) | 0 |
+| extensive | stand-in | 22 | 13 (59.1%) | 6 (27.3%) | 3 (13.6%) | 0 |
+
+The `none` setting no longer appears; the 3 out-of-scope refusals (U01 × 3 presets)
+are now counted under the preset they were asked under.
+
+Real Groq quality run v4 (2026-11-11, `openai/gpt-oss-120b`, 23 questions):
+**completed**. All 23 `status=ok`, 0 retries, 58,791 tokens in / 5,674 tokens out,
+724.1 s wall clock. Grades: correct=12, refused_wrongly=7, refused_correctly=4,
+wrong=0. Real rows merged into `logs/results.csv` (128 total) via
+`scripts/merge_results.py`; `metrics --export` regenerated root `results.csv`;
+`reconcile` reports 0 mismatches.
+
+| Setting | Source | Questions | Correct | Wrong | Refused correctly | Refused wrongly | Tokens/answer | TTFT p50/p95 ms |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| balanced | real | 23 | 12 (52.2%) | 0 (0.0%) | 4 (17.4%) | 7 (30.4%) | 2,802.8 | 1,516 / 58,281 |
+| light | stand-in | 23 | 11 (47.8%) | 8 (34.8%) | 4 (17.4%) | 0 (0.0%) | 1,426.5 | 62 / 156 |
+| balanced | stand-in | 23 | 13 (56.5%) | 6 (26.1%) | 4 (17.4%) | 0 (0.0%) | 2,063.0 | 63 / 219 |
+| extensive | stand-in | 23 | 13 (56.5%) | 6 (26.1%) | 4 (17.4%) | 0 (0.0%) | 2,483.1 | 63 / 313 |
+
+### Real Groq run v3 (aborted)
+
+Ten rows written before the run was stopped to apply the 120 s deadline fix.
+A01 correct, A02 correct, A03 correct (TTFT 469 ms, total 58,860 ms — admission
+wait for TPM), A04 wrong, A05 correct, A06 wrong, A07 correct (TTFT 56,656 ms —
+admission wait dominated). No 429 observed. See section H for header evidence.
+
+Ten rows written before the run was stopped to apply the 120 s deadline fix.
+A01 correct, A02 correct, A03 correct (TTFT 469 ms, total 58,860 ms — admission
+wait for TPM), A04 wrong, A05 correct, A06 wrong, A07 correct (TTFT 56,656 ms —
+admission wait dominated). No 429 observed. See section H for header evidence.
+
+---
+
+## K. Retrieval and quality evaluation
+
+To be appended after the evaluation run. The dataset is `evaluation/questions.json`; the
+grader is `the_relay/eval/grader.py`; the methodology is documented in `README.md` and the
+report.
 
 ---
 
@@ -548,31 +731,30 @@ decision must be authored by the owner from the real conversation. A scaffold is
 
 ## N. Current system state
 
-### N.1 At the end of session 1
+### N.1 Current state (session 2, 2026-11-11)
 
-- Architecture: as in C.2.
-- Configuration: as in F.
-- Working: corpus verification, ingestion, retrieval, scope/evidence gates, generation
-  (stand-in), deterministic verification, quota, scheduler, retry, instrumentation,
-  evaluation harness, experiments (stand-in), tests.
-- Blocked: real Groq probe and real load runs (no key); Vaani feedback (owner).
-- Known bugs: see L; add new ones as found.
-- Latest test results: see the session checkpoint in the conversation and `CHANGELOG.md`.
-- Latest experiment results: see `results/` and section J.
-- Remaining quota: **unknown** (no account key).
-- Outstanding tasks: run real probe; calibrate stand-in; run real steady/burst if budget
-  allows; write Vaani feedback; author collaboration history; generate final two-page
-  report; run the live-discussion modification exercises.
+- `GROQ_API_KEY` is present in gitignored `.env`; `RELAY_PROVIDER` defaults to `standin`.
+- Configuration history rewritten in `.env.example` (matches actual `Settings`; Redis/semantic-cache variables removed).
+- Stand-in calibrated against 11 successful real Groq calls: base_latency 810 ms,
+  TTFT fraction 0.77, stream_chunk_ms 0. Calibration table in section I and
+  `config/standin_calibration.json`.
+- 89 automated tests pass (`pytest -q`, ~3.5 s), no network/quota. `pytest.ini`
+  enforces `asyncio_mode = auto`.
+- Canonical stand-in runs complete: `logs/results.csv` + root `results.csv` have
+  105 rows across quality (69) + steady/burst/overload/reduced_quota/daily_exhausted.
+- Real Groq quality run v4 (`openai/gpt-oss-120b`, 23 questions, 120 s deadline)
+  is **in progress** in `C:\Users\Prachin\AppData\Local\Temp\opencode\relay_real_balanced_v4`.
+- Bugs fixed: BUG-002 through BUG-009 (see section L), each with a regression test.
+- `scripts/merge_results.py` added to merge real rows into the canonical CSV without
+  duplicate request_ids.
+- Report `reports/REPORT.md` not yet written; needs real v4 numbers before filling.
 
-### N.2 Recommended next steps (ordered)
+### N.2 Blocked / owner-authored items
 
-1. Add `GROQ_API_KEY` to `.env` and run `py -m the_relay.main probe --requests 10`.
-2. Use the probe output to replace provisional stand-in latency/failure parameters.
-3. Run the real evaluation on the balanced preset (20 questions) if budget allows.
-4. Re-run the stand-in load scenarios with the calibrated stand-in.
-5. Write the two-page report from the generated tables; verify every number reconciles.
-6. Author Vaani feedback and the collaboration section.
-7. Practise the eight modification exercises in `LIVE_DISCUSSION_PREP.md`.
+- Vaani feedback: owner must visit https://www.vaani.dev/ and author.
+- Collaboration history (section M): owner must author the three most important prompts,
+  the one assistant error caught, and the one overruled decision from the real
+  conversation. Scaffold exists; no invented history.
 
 ---
 
@@ -607,3 +789,25 @@ decision must be authored by the owner from the real conversation. A scaffold is
 
 *End of journal section created in session 1. Append new entries below this line; do not
 rewrite history.*
+
+### Session 2 — 2026-11-11
+
+- **Completed:** real Groq probe (3× HTTP 200; limits confirmed from headers); first
+  verified real answer (A01: 2,110 in / 59 out, TTFT 782 ms, total 875 ms); stand-in
+  calibrated from 11 real calls (base_latency 810 ms, TTFT fraction 0.77,
+  stream_chunk_ms 0); `.env.example` rewritten; README/CHANGELOG/LIVE_DISCUSSION_PREP
+  added; test count raised from 84 to 89.
+- **Fixed bugs:** BUG-002 (deadline ms/s mismatch), BUG-003 (zero-wait boundary),
+  BUG-004 (double-counted in-flight reservations), BUG-005 (grader refusal-before-facts),
+  BUG-006 (full-width citation brackets), BUG-007 (daily reset token events),
+  BUG-008 (scheduler `max_queue_depth=0`), BUG-009 (retrieval_setting "none" for scope
+  refusals). All have regression tests.
+- **Changed:** removed unused `ResultsWriter` from `Relay`; runner/CLI owns one row per
+  request; real quality deadline raised to 120 s for TPM pacing; Table 2a/2b exclude
+  quality; Table 3 quality-only and source-separated; metrics CLI prints source.
+- **Tests:** 89 pass (~3.5 s), no network/quota.
+- **Stand-in canonical runs:** complete (105 rows: quality 69 + 5 load scenarios).
+- **Real run v4:** in progress (`relay_real_balanced_v4`, 23 questions).
+- **Problems:** Vaani feedback and collaboration history are owner-authored placeholders.
+- **Next:** wait for v4; merge v4 rows via `scripts/merge_results.py`; `metrics --export`;
+  `reconcile`; write `reports/REPORT.md`; commit with detailed messages.

@@ -131,15 +131,23 @@ class QuotaManager:
         return int(sum(tokens for _stamp, tokens in self._token_events))
 
     def _minute_reset_s(self, now: float) -> float:
-        recent = [stamp for stamp in self._request_times if stamp >= now - 60.0]
-        if not recent:
+        # Token events matter here too: ``preconsume`` and a failed call can
+        # leave tokens without a paired request timestamp.
+        stamps = [stamp for stamp in self._request_times if stamp >= now - 60.0]
+        stamps += [
+            stamp for stamp, _tokens in self._token_events if stamp >= now - 60.0
+        ]
+        if not stamps:
             return 0.0
-        return max(0.0, 60.0 - (now - min(recent)))
+        return max(0.0, 60.0 - (now - min(stamps)))
 
     def _day_reset_s(self, now: float) -> float:
-        if not self._request_times:
+        stamps = list(self._request_times) + [
+            stamp for stamp, _tokens in self._token_events
+        ]
+        if not stamps:
             return 0.0
-        return max(0.0, 86_400.0 - (now - min(self._request_times)))
+        return max(0.0, 86_400.0 - (now - min(stamps)))
 
     # ------------------------------------------------------------------
     # Admission
@@ -165,15 +173,17 @@ class QuotaManager:
             # Requests per day binds first if the account has been busy all day.
             if len(self._request_times) + 1 > rpd_limit:
                 return None, self._day_reset_s(now), "daily request limit"
-            # Tokens per day.
-            if self._day_tokens() + self._reserved_tokens + estimated_tokens > tpd_limit:
+            # Tokens per day. ``_token_events`` already contains the estimated
+            # tokens of admitted-but-unfinished calls, so adding
+            # ``_reserved_tokens`` on top would double count them.
+            if self._day_tokens() + estimated_tokens > tpd_limit:
                 return None, self._day_reset_s(now), "daily token limit"
             # Requests per minute.
             if minute_requests + 1 > rpm_limit:
                 return None, self._minute_reset_s(now), "per-minute request limit"
-            # Tokens per minute. Reserved tokens from admitted-but-unfinished
-            # calls are included so concurrent admissions cannot oversubscribe.
-            if minute_tokens + self._reserved_tokens + estimated_tokens > tpm_limit:
+            # Tokens per minute. In-flight reservations are in ``_token_events``
+            # (see ``try_acquire``/``release``), so they are counted once.
+            if minute_tokens + estimated_tokens > tpm_limit:
                 return None, self._minute_reset_s(now), "per-minute token limit"
 
             # Admit and reserve.
@@ -217,7 +227,17 @@ class QuotaManager:
                     f"deadline expired while waiting for {reason}",
                     retry_after_s=wait_s,
                 )
-            if wait_s <= 0 or wait_s > remaining_s:
+            if wait_s <= 0:
+                # ``try_acquire`` said "no room" but the computed reset is
+                # zero. This happens at the exact rolling-window boundary,
+                # where an event is still counted by the inclusive ``>=``
+                # check but is about to fall out. Raising here would reject a
+                # request that can be admitted a few milliseconds later, which
+                # is exactly what happened to four real Groq requests. Re-check
+                # shortly instead of failing.
+                await asyncio.sleep(min(0.05, max(0.0, remaining_s)))
+                continue
+            if wait_s > remaining_s:
                 raise QuotaExceededError(
                     f"{reason}; next capacity in {wait_s:.1f}s exceeds the "
                     f"remaining deadline of {remaining_s:.1f}s",

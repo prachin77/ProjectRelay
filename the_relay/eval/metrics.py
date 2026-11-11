@@ -125,9 +125,16 @@ def _peak_concurrency(rows: list[Row]) -> int | None:
 
 
 def table_2a(rows: list[Row]) -> list[dict[str, Any]]:
-    """Latency per load scenario (Table 2a)."""
+    """Latency per load scenario (Table 2a).
+
+    Only load rows are included. ``scenario=quality`` rows answer the same
+    questions one at a time and would otherwise appear as a sixth "scenario",
+    inflating the table with a population it is not describing.
+    """
     grouped: dict[str, list[Row]] = defaultdict(list)
     for row in rows:
+        if row.get("scenario") == "quality":
+            continue
         grouped[row.get("scenario", "")].append(row)
 
     out: list[dict[str, Any]] = []
@@ -165,6 +172,8 @@ def table_2b(rows: list[Row]) -> list[dict[str, Any]]:
     """Outcomes per load scenario (Table 2b)."""
     grouped: dict[str, list[Row]] = defaultdict(list)
     for row in rows:
+        if row.get("scenario") == "quality":
+            continue
         grouped[row.get("scenario", "")].append(row)
 
     out: list[dict[str, Any]] = []
@@ -235,12 +244,19 @@ def table_3(rows: list[Row]) -> list[dict[str, Any]]:
     ``refused_wrongly`` count is reported too, because a setting that refuses
     answerable questions is not merely "not correct".
     """
-    grouped: dict[str, list[Row]] = defaultdict(list)
+    grouped: dict[tuple[str, str], list[Row]] = defaultdict(list)
     for row in rows:
-        grouped[row.get("retrieval_setting", "")].append(row)
+        # Table 3 is a retrieval-settings comparison, so it uses the quality
+        # runs only. Load rows answer different questions under pressure and
+        # would make the percentage depend on scenario design.
+        if row.get("scenario") != "quality":
+            continue
+        grouped[
+            (row.get("retrieval_setting", ""), row.get("source", ""))
+        ].append(row)
 
     out: list[dict[str, Any]] = []
-    for setting, group in grouped.items():
+    for (setting, source), group in sorted(grouped.items()):
         n = len(group)
         grades = Counter(row.get("answer_grade", "") for row in group)
         correct = grades.get("correct", 0)
@@ -266,6 +282,7 @@ def table_3(rows: list[Row]) -> list[dict[str, Any]]:
         out.append(
             {
                 "retrieval_setting": setting,
+                "source": source,
                 "questions_asked": n,
                 "correct_and_cited_pct": round(100.0 * correct / n, 1),
                 "wrong_pct": round(100.0 * wrong / n, 1),

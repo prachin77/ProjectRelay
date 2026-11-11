@@ -96,6 +96,10 @@ class Settings(BaseSettings):
     # Verified against https://console.groq.com/docs/models on 2026-11-10.
     groq_model: str = "openai/gpt-oss-120b"
     groq_base_url: str = "https://api.groq.com/openai/v1"
+    # gpt-oss is a reasoning model. On the free tier the reasoning tokens are
+    # part of the completion budget, so a low effort setting keeps a short
+    # evidence-grounded answer from being crowded out by hidden reasoning.
+    groq_reasoning_effort: Literal["low", "medium", "high"] = "low"
     # Per-HTTP-request timeout. This is not the user-facing deadline; the
     # pipeline deadline is shorter and enforced around the whole request.
     groq_request_timeout_ms: int = 20_000

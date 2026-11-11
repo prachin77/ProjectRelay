@@ -161,8 +161,20 @@ async def run_quality(
     overrides.setdefault("timeout_probability", 0.0)
 
     for preset_name in preset_names:
+        # Stand-in quality runs use a fresh Relay per question so that simulated
+        # quota never becomes the variable being measured: Table 3 compares
+        # retrieval settings, not admission control. A real provider is
+        # different: its TPM window is shared, so resetting local quota per
+        # question would just provoke real 429s. For Groq we therefore keep one
+        # Relay (and one quota manager) per preset. This harness difference is
+        # recorded in the report.
+        shared_relay: Relay | None = None
+        if settings.provider == "groq":
+            shared_relay = Relay(
+                _make_settings(settings, {"retrieval_preset": preset_name}),
+            )
         for question in questions:
-            relay = Relay(
+            relay = shared_relay or Relay(
                 _make_settings(
                     settings,
                     {
@@ -178,7 +190,14 @@ async def run_quality(
                 scenario="quality",
                 request_id=request_id,
                 preset_name=preset_name,
-                deadline_ms=60_000,
+                # A stand-in question finishes in well under a second, so 60 s is a
+            # generous safety net. A real Groq quality run is different: the
+            # shared TPM window admits about three ~2.2k-token calls per minute,
+            # so the fourth must wait ~60 s. A 60 s deadline then expires during
+            # *normal* pacing and records a timeout that has nothing to do with
+            # answer quality. Give the real run 120 s and state in the report
+            # that its latency includes admission waiting.
+            deadline_ms=120_000 if settings.provider == "groq" else 60_000,
                 use_cache=False,
             )
             _grade_and_write(
@@ -194,7 +213,10 @@ async def run_quality(
             summary.grades[result.answer_grade] = (
                 summary.grades.get(result.answer_grade, 0) + 1
             )
-            await relay.aclose()
+            if shared_relay is None:
+                await relay.aclose()
+        if shared_relay is not None:
+            await shared_relay.aclose()
 
     summary.finished_at = utc_now_iso()
     summary.duration_s = time.monotonic() - started_mono
@@ -237,7 +259,7 @@ async def run_scenario(
 
     semaphore = asyncio.Semaphore(max(1, scenario.concurrency))
 
-    async def one(index: int) -> None:
+    async def one(index: int) -> Any:
         await asyncio.sleep(index * scenario.interval_ms / 1000.0)
         question = chosen[index % len(chosen)]
         async with semaphore:
@@ -256,6 +278,7 @@ async def run_scenario(
                 writer=writer,
                 answers=answers,
             )
+            return result
 
     tasks = [asyncio.create_task(one(index)) for index in range(scenario.requests)]
     results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -277,6 +300,13 @@ async def run_scenario(
             summary.statuses["internal_error"] = (
                 summary.statuses.get("internal_error", 0) + 1
             )
+            continue
+        # The per-request loop already wrote the graded row. Aggregate the same
+        # objects here so Table 2b's outcome counts come from one source of
+        # truth rather than a second pass over the CSV.
+        summary.statuses[item.status] = summary.statuses.get(item.status, 0) + 1
+        grade = item.answer_grade or "ungraded"
+        summary.grades[grade] = summary.grades.get(grade, 0) + 1
     summary.duration_s = time.monotonic() - started_mono
     _record_summary(settings, summary)
     await relay.aclose()

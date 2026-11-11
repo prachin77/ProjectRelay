@@ -93,6 +93,25 @@ def _protect_abbreviations(text: str) -> str:
     return _ABBREVIATION_RE.sub(repl, text)
 
 
+def normalise_citation_brackets(text: str) -> str:
+    """Turn full-width / CJK citation brackets into ASCII ``[ ]``.
+
+    A real model occasionally emits ``【S1】`` (U+3010/U+3011) because those
+    characters are common in its training data. That is a formatting variant,
+    not a wrong citation, and treating it as "uncited" produced a false refusal
+    in a live Groq run. Normalising here keeps the verifier strict about the
+    *id* while being agnostic about the bracket glyph.
+    """
+    if not text:
+        return text
+    return (
+        text.replace("\u3010", "[")
+        .replace("\u3011", "]")
+        .replace("\uff3b", "[")
+        .replace("\uff3d", "]")
+    )
+
+
 def split_sentences(text: str) -> list[str]:
     """Split an answer into claim-sized sentences.
 
@@ -245,6 +264,7 @@ def verify_answer(
             method=method,
         )
 
+    answer = normalise_citation_brackets(answer)
     by_id = {chunk.source_id: chunk for chunk in chunks if chunk.source_id}
     sentences = split_sentences(answer)
     issues: list[str] = []
