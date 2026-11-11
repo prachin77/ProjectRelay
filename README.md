@@ -51,6 +51,42 @@ The probe records HTTP status, latency and the real `x-ratelimit-*` headers in
 `logs/probe.jsonl`. Those headers are the authoritative limits for the account,
 not the documentation.
 
+### What the probe measures and where the tokens come from
+
+Each probe request sends this tiny prompt:
+
+```
+system: "Reply with the single word: ready."
+user:   "Are you ready?"
+```
+
+That is 10 content words, but Groq reports **86 input tokens** because its chat
+template wraps every message in special tokens (`<|start_header_id|>`,
+`<|end_header_id|>`, `<|eot_id|>`, role names, BOS/EOS). The local estimator
+counts content words only; the quota manager's 15% safety reserve absorbs this
+discrepancy.
+
+Output is capped at `max_tokens=8`. In the probe, all 8 output tokens are consumed
+by the model's hidden reasoning, leaving `text: ""` (empty visible response).
+This is what led to `RELAY_GROQ_REASONING_EFFORT=low` — without it, reasoning
+eats the entire output budget.
+
+Cost of the probe: ~3 × 86 = 258 input tokens + 24 output tokens ≈ 282 tokens
+total. Negligible against the 200,000 daily budget.
+
+### Test RPM (30 requests/minute)
+
+To verify the RPM limit independently (TPM binds first at ~3 calls/min with
+real prompts, so RPM is never hit in normal use):
+
+```powershell
+python -m the_relay.main --provider groq probe --requests 31
+```
+
+Sends 31 tiny requests in under 60 seconds. If RPM=30, the 31st returns HTTP 429.
+Cost: ~2,666 input tokens + ~248 output tokens ≈ 2,914 tokens total.
+Watch `x-ratelimit-remaining-requests` drop from 999 to 969 in `logs/probe.jsonl`.
+
 ```powershell
 python -m the_relay.main --provider groq ask --preset balanced "Your question"
 ```

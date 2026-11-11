@@ -121,6 +121,15 @@ which both providers share. The stand-in's per-call latency is ~0.8 s; real
 Groq's per-call latency is also ~0.8 s, but real quality runs take 12 min for
 23 questions due to TPM pacing.
 
+**Token counting note:** `estimate_messages_tokens` (local estimator) approximates
+Groq's tokenizer. The quota manager uses the estimate for admission control,
+then reconciles with Groq's actual `usage.input_tokens` / `usage.output_tokens`
+after the call. Groq's chat template adds ~76 tokens of overhead per request
+(special tokens, role markers, BOS/EOS) that the local estimator doesn't count —
+the 15% safety reserve absorbs this discrepancy. Probe data: 10 content words →
+86 actual input tokens (86 reported by Groq, not estimated). Probe output cost:
+~3 × 86 = 258 input + 24 output ≈ 282 tokens total.
+
 ---
 
 ## 4. Curated 23 questions (13 mine + 10 llm)
