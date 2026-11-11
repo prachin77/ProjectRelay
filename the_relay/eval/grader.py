@@ -71,8 +71,25 @@ class GradeExplanation:
 
 
 def normalise(text: str) -> str:
-    """Lower-case and collapse whitespace for matching."""
-    return re.sub(r"\s+", " ", text or "").strip().lower()
+    """Lower-case, normalise unicode punctuation, and collapse whitespace.
+
+    Groq (and the stand-in) sometimes emit non-breaking hyphens (U+2011),
+    en-dashes, or curly quotes. A required term such as ``encoder-decoder``
+    would then fail to match ``Encoder\\u2011decoder`` even though a human
+    reads them as identical. Normalising the common look-alikes to their ASCII
+    forms keeps the grader honest without weakening the number boundary checks.
+    """
+    text = text or ""
+    # Normalise unicode dashes / hyphens to a plain ASCII hyphen.
+    for ch in ("\u2010", "\u2011", "\u2012", "\u2013", "\u2014", "\u2212"):
+        text = text.replace(ch, "-")
+    # Normalise curly quotes to straight quotes.
+    for ch in ("\u2018", "\u2019"):
+        text = text.replace(ch, "'")
+    for ch in ("\u201c", "\u201d"):
+        text = text.replace(ch, '"')
+    text = text.lower()
+    return re.sub(r"\s+", " ", text).strip()
 
 
 def has_citation(answer: str) -> bool:
