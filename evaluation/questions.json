@@ -1,0 +1,195 @@
+{
+  "version": 1,
+  "notes": [
+    "Every question was written for this assignment, not copied from a paper's own evaluation.",
+    "required_all is a list of groups. Every group must match at least one alternative for an answer to be graded 'correct'.",
+    "The facts in required_all were checked by reading the indexed PDF text; the notes field records the location.",
+    "Unanswerable questions are graded 'refused_correctly' only when the assistant refuses; a confident invented answer is 'wrong'."
+  ],
+  "questions": [
+    {
+      "qid": "A01",
+      "paper": "attention",
+      "question": "What BLEU score did the Transformer achieve on the WMT 2014 English-to-German translation task?",
+      "answerable": true,
+      "required_all": [["28.4"], ["bleu"]],
+      "notes": "Abstract and Section 6.1 (p. 1, p. 8)."
+    },
+    {
+      "qid": "A02",
+      "paper": "attention",
+      "question": "How long did the big Transformer model train, and on how many GPUs?",
+      "answerable": true,
+      "required_all": [["3.5"], ["8", "eight"], ["gpu"]],
+      "notes": "Section 5.2 and Section 6.1 (p. 7, p. 8): 300,000 steps, 3.5 days, 8 P100 GPUs."
+    },
+    {
+      "qid": "A03",
+      "paper": "attention",
+      "question": "Why does scaled dot-product attention divide the dot products by the square root of d_k?",
+      "answerable": true,
+      "required_all": [["dot product"], ["large", "grow"], ["softmax"], ["gradient"]],
+      "notes": "Section 3.2.1 (p. 4): large dot products push softmax into regions with extremely small gradients."
+    },
+    {
+      "qid": "A04",
+      "paper": "attention",
+      "question": "What are the three ways multi-head attention is used inside the Transformer?",
+      "answerable": true,
+      "required_all": [["encoder-decoder"], ["encoder"], ["decoder"], ["self-attention"]],
+      "notes": "Section 3.2.3 (p. 5): encoder-decoder attention, encoder self-attention, masked decoder self-attention."
+    },
+    {
+      "qid": "A05",
+      "paper": "attention",
+      "question": "How many identical layers are in the encoder and decoder of the base Transformer?",
+      "answerable": true,
+      "required_all": [["6", "six"], ["layer"]],
+      "notes": "Section 3.1 (p. 3): N = 6 in both stacks."
+    },
+    {
+      "qid": "A06",
+      "paper": "attention",
+      "question": "Which optimizer trained the Transformer, and how many warmup steps did it use?",
+      "answerable": true,
+      "required_all": [["adam"], ["warmup"], ["4000"]],
+      "notes": "Section 5.3 (p. 7): Adam with warmup_steps = 4000."
+    },
+    {
+      "qid": "A07",
+      "paper": "attention",
+      "question": "Why is masking used in the decoder's self-attention layers?",
+      "answerable": true,
+      "required_all": [["mask"], ["subsequent", "future"]],
+      "notes": "Section 3.1 and 3.2.3 (p. 3, p. 5): prevents attending to later positions."
+    },
+    {
+      "qid": "A08",
+      "paper": "attention",
+      "question": "Which mathematical functions does the Transformer use for positional encodings?",
+      "answerable": true,
+      "required_all": [["sine", "sin"], ["cosine", "cos"]],
+      "notes": "Section 3.5 (p. 6): sine and cosine functions of different frequencies."
+    },
+    {
+      "qid": "M01",
+      "paper": "moshi",
+      "question": "How does Moshi model spoken dialogue, and what kind of conversation does that enable?",
+      "answerable": true,
+      "required_all": [["speech-to-speech"], ["full-duplex"]],
+      "notes": "Abstract and Section 3.1 (p. 1, p. 6)."
+    },
+    {
+      "qid": "M02",
+      "paper": "moshi",
+      "question": "What is Mimi, and what role does it play in Moshi?",
+      "answerable": true,
+      "required_all": [["mimi"], ["codec"], ["audio"]],
+      "notes": "Section 3.3 (p. 9): Mimi is a neural audio codec that turns audio into discrete tokens and back."
+    },
+    {
+      "qid": "M03",
+      "paper": "moshi",
+      "question": "What is the Inner Monologue method in Moshi, and what does it improve?",
+      "answerable": true,
+      "required_all": [["inner monologue"], ["text"], ["linguistic", "quality"]],
+      "notes": "Abstract and Section 3.4.4: predicts time-aligned text tokens before audio tokens; improves linguistic quality and factuality."
+    },
+    {
+      "qid": "M04",
+      "paper": "moshi",
+      "question": "What are the two Transformer models inside the RQ-Transformer, and what does each do?",
+      "answerable": true,
+      "required_all": [["temporal"], ["depth"]],
+      "notes": "Section 3.4.1 (p. 13): a temporal Transformer over timesteps and a depth Transformer over codebook steps."
+    },
+    {
+      "qid": "M05",
+      "paper": "moshi",
+      "question": "How large is the unsupervised audio dataset used to train Moshi?",
+      "answerable": true,
+      "required_all": [["7 million"], ["hours"]],
+      "notes": "Section 4.2 (p. 17): 7 million hours."
+    },
+    {
+      "qid": "M06",
+      "paper": "moshi",
+      "question": "What latency does Moshi report for full-duplex spoken dialogue?",
+      "answerable": true,
+      "required_all": [["200ms", "200 ms"], ["160ms", "160 ms"]],
+      "notes": "Abstract (p. 1): theoretical 160 ms, 200 ms in practice."
+    },
+    {
+      "qid": "D01",
+      "paper": "dynamic_chunking",
+      "question": "What is dynamic chunking, and what does it replace in the H-Net?",
+      "answerable": true,
+      "required_all": [["dynamic chunking"], ["tokenization", "segmentation"], ["end-to-end"]],
+      "notes": "Abstract (p. 1): replaces the tokenization-LM-detokenization pipeline with a single end-to-end model."
+    },
+    {
+      "qid": "D02",
+      "paper": "dynamic_chunking",
+      "question": "How does the routing module decide where a chunk boundary should be?",
+      "answerable": true,
+      "required_all": [["routing module"], ["cosine similarity"], ["boundary"]],
+      "notes": "Section 2.2.1 (p. 6): cosine similarity between adjacent encoder outputs gives a boundary probability."
+    },
+    {
+      "qid": "D03",
+      "paper": "dynamic_chunking",
+      "question": "What does the dechunking layer do in an H-Net?",
+      "answerable": true,
+      "required_all": [["dechunk"], ["smoothing"], ["upsampl"]],
+      "notes": "Section 2.2.2 (p. 6): a smoothing module and an upsampler restore the original resolution."
+    },
+    {
+      "qid": "D04",
+      "paper": "dynamic_chunking",
+      "question": "How does a byte-level H-Net with one stage of dynamic chunking compare with a BPE-tokenized Transformer?",
+      "answerable": true,
+      "required_all": [["matches"], ["perplexity"], ["1b", "1 b"]],
+      "notes": "Section 1 (p. 3): matches perplexity and downstream performance at sizes exceeding 1B parameters."
+    },
+    {
+      "qid": "D05",
+      "paper": "dynamic_chunking",
+      "question": "What problem with fixed-vocabulary tokenization motivates the Dynamic Chunking paper?",
+      "answerable": true,
+      "required_all": [["tokenization"], ["handcrafted", "preprocessing", "barrier"]],
+      "notes": "Abstract and Section 1 (p. 1): tokenization is a handcrafted preprocessing barrier to end-to-end models."
+    },
+    {
+      "qid": "U01",
+      "paper": "out_of_scope",
+      "question": "What is the capital of France?",
+      "answerable": false,
+      "required_all": [],
+      "notes": "Out-of-scope control. The scope filter should refuse before any model call."
+    },
+    {
+      "qid": "U02",
+      "paper": "unanswerable",
+      "question": "Does the Moshi paper report results on video understanding benchmarks?",
+      "answerable": false,
+      "required_all": [],
+      "notes": "Control for an in-domain-sounding but absent topic. The paper is about speech, not video."
+    },
+    {
+      "qid": "U03",
+      "paper": "unanswerable",
+      "question": "What learning rate did the Dynamic Chunking paper use for ImageNet classification?",
+      "answerable": false,
+      "required_all": [],
+      "notes": "ImageNet appears only in a reference title; the paper does not report ImageNet experiments."
+    },
+    {
+      "qid": "U04",
+      "paper": "unanswerable",
+      "question": "How does the Transformer paper handle speech input?",
+      "answerable": false,
+      "required_all": [],
+      "notes": "Attention Is All You Need studies translation and parsing, not speech input."
+    }
+  ]
+}

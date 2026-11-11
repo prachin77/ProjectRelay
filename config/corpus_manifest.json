@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "verified_on": "2026-11-10",
+  "note": "Hashes were computed locally from the pinned PDFs. They are the identity of the corpus: if a PDF changes, every cache entry and every retrieval index is invalidated. Do not edit a hash to make a check pass; replace the file and record the change in PROJECT_JOURNAL.md.",
+  "papers": [
+    {
+      "doc_id": "attention",
+      "title": "Attention Is All You Need",
+      "arxiv_id": "1706.03762",
+      "version": "v7",
+      "version_date": "2023-08-02",
+      "url": "https://arxiv.org/abs/1706.03762v7",
+      "pdf_url": "https://arxiv.org/pdf/1706.03762v7",
+      "file": "documents/attention_is_all_you_need_v7.pdf",
+      "sha256": "bdfaa68d8984f0dc02beaca527b76f207d99b666d31d1da728ee0728182df697",
+      "bytes": 2215244,
+      "pages": 15
+    },
+    {
+      "doc_id": "moshi",
+      "title": "Moshi: a speech-text foundation model for real-time dialogue",
+      "arxiv_id": "2410.00037",
+      "version": "v1",
+      "version_date": "2024-09-17",
+      "url": "https://arxiv.org/abs/2410.00037v1",
+      "pdf_url": "https://arxiv.org/pdf/2410.00037v1",
+      "file": "documents/moshi_v1.pdf",
+      "sha256": "a687144cc77bea86b0c60ae800ccb1d3e0816033fa5c7960388fe29a0dbfcfac",
+      "bytes": 4694312,
+      "pages": 66
+    },
+    {
+      "doc_id": "dynamic_chunking",
+      "title": "Dynamic Chunking for End-to-End Hierarchical Sequence Modeling",
+      "arxiv_id": "2507.07955",
+      "version": "v2",
+      "version_date": "2025-07-15",
+      "url": "https://arxiv.org/abs/2507.07955v2",
+      "pdf_url": "https://arxiv.org/pdf/2507.07955v2",
+      "file": "documents/dynamic_chunking_v2.pdf",
+      "sha256": "04a2b32e6e82853cfc23c5db132750874a86cde99219ec6f664128f4aa83122f",
+      "bytes": 1375282,
+      "pages": 39
+    }
+  ]
+}

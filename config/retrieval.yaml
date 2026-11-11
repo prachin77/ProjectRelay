@@ -4,23 +4,30 @@
 # Each preset controls three independent things:
 #   chunk_words / overlap_words : how the papers are split ("piece size")
 #   top_k                       : how many pieces are fetched
-#   rerank                      : whether a cross-encoder re-orders the
-#                                 fused candidate list ("re-ranking")
+#   rerank                      : whether the deterministic reranker re-orders
+#                                 the fused candidate list ("re-ranking")
 #
 # WHY WORDS AND NOT TOKENS?
-#   Token counts depend on which tokenizer you ask. The embedding tokenizer,
-#   the Groq tokenizer and the chunk-size tokenizer are three different
-#   things, so "token" would be an ambiguous unit in a config file. Words are
-#   unambiguous and stable. The generation prompt's real token cost is
-#   measured separately with a local estimator before each call.
+#   Token counts depend on which tokenizer you ask. The retrieval tokenizer and
+#   the Groq tokenizer are different, so "token" would be ambiguous in a config
+#   file. Words are unambiguous and stable. The generation prompt's real token
+#   cost is measured separately with a local estimator before each call, and
+#   the provider's reported usage replaces the estimate after the call.
 #
 # WHY DOES `extensive` USE *SMALLER* CHUNKS?
-#   This is the counter-intuitive part, and it is a hypothesis we will test
-#   rather than assert. The binding budget is TPM = 8,000 tokens/minute, so
-#   "retrieve more" cannot mean "paste more text". It has to mean "retrieve
-#   more precise granules and let the reranker pick". If Table 3 shows this
-#   is wrong, the report says so and `balanced` becomes the answer. Both
-#   outcomes are acceptable; only an unmeasured claim is not.
+#   This is the counter-intuitive part, and it is a hypothesis we test rather
+#   than assert. The binding budget is TPM = 8,000 tokens/minute, so "retrieve
+#   more" must not mean "paste more text". It has to mean "retrieve more
+#   precise granules and let the reranker pick". If Table 3 shows this is
+#   wrong, the report says so and `balanced` becomes the answer. Both outcomes
+#   are acceptable; only an unmeasured claim is not.
+#
+# WHY THESE INITIAL NUMBERS?
+#   They are *provisional engineering defaults*, not measured constants. They
+#   were chosen so that a balanced prompt is roughly 1,500-2,500 input tokens:
+#   a single request then consumes ~25-35% of one minute of the documented
+#   8k TPM budget, leaving room for concurrency. The evaluation set and Table 3
+#   decide whether they stay. Every change is recorded in PROJECT_JOURNAL.md.
 # ---------------------------------------------------------------------------
 
 # Candidate pool size before reranking. The reranker can only promote what
@@ -35,31 +42,34 @@ presets:
 
   light:
     description: >
-      Cheapest setting. Big chunks, few of them, no reranker. Lowest prefill
-      tokens, lowest time-to-first-token. Expected to lose on multi-part
-      questions where the answer is spread across two sections.
-    chunk_words: 700
-    overlap_words: 60
+      Cheapest setting. Larger chunks, few of them, no reranker. Lowest
+      prefill tokens, lowest time-to-first-token. Expected to lose on
+      multi-part questions where the answer is spread across two sections.
+    chunk_words: 400
+    overlap_words: 40
     top_k: 3
     rerank: false
+    max_context_tokens: 1800
 
   balanced:
     description: >
-      Default. Medium chunks, moderate k, reranker on. The reranker is the
-      main quality lever here: it costs ~10-25 ms on CPU and no API tokens,
-      because reranking is local.
-    chunk_words: 450
-    overlap_words: 80
+      Default. Medium chunks, moderate k, deterministic reranker on. The
+      reranker is the main quality lever here: it costs no API tokens because
+      it runs locally.
+    chunk_words: 280
+    overlap_words: 50
     top_k: 5
     rerank: true
+    max_context_tokens: 2200
 
   extensive:
     description: >
-      Broadest evidence collection. Small granules, many of them, reranked.
+      Broadest evidence collection. Small granules, more of them, reranked.
       Used for multi-part questions and as the expensive end of the
       quality/cost curve. This is also the tier that gets downgraded first
       when the daily budget runs low.
-    chunk_words: 300
-    overlap_words: 120
-    top_k: 9
+    chunk_words: 200
+    overlap_words: 60
+    top_k: 8
     rerank: true
+    max_context_tokens: 2800
