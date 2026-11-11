@@ -74,18 +74,20 @@ eats the entire output budget.
 Cost of the probe: ~3 × 86 = 258 input tokens + 24 output tokens ≈ 282 tokens
 total. Negligible against the 200,000 daily budget.
 
-### Test RPM (30 requests/minute)
+### RPM probe test (31 requests, 2026-11-11)
 
-To verify the RPM limit independently (TPM binds first at ~3 calls/min with
-real prompts, so RPM is never hit in normal use):
+Command: `python -m the_relay.main --provider groq probe --requests 31`
 
-```powershell
-python -m the_relay.main --provider groq probe --requests 31
-```
+Result: **30 requests returned HTTP 200; the 31st returned HTTP 429.**
+- Error: `"Rate limit reached for model openai/gpt-oss-120b ... on requests per
+  minute (RPM): Limit 30, Used 30, Requested 1. Please try again in 2s."`
+- Recovery time: ~2 seconds (rolling window).
+- Output: `logs/probe.jsonl` (34 lines total: 3 from first probe + 30 ok + 1 error).
+- Token cost: ~2,666 input + ~248 output ≈ 2,914 tokens (1.5% of daily budget).
 
-Sends 31 tiny requests in under 60 seconds. If RPM=30, the 31st returns HTTP 429.
-Cost: ~2,666 input tokens + ~248 output tokens ≈ 2,914 tokens total.
-Watch `x-ratelimit-remaining-requests` drop from 999 to 969 in `logs/probe.jsonl`.
+This upgrades RPM from "documented, medium confidence" to **measured, high
+confidence**: 30 is a hard limit, recovery is ~2 s, and the 429 body contains
+the exact limit/used/requested counts.
 
 ```powershell
 python -m the_relay.main --provider groq ask --preset balanced "Your question"

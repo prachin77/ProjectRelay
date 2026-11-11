@@ -456,14 +456,18 @@ claim that a free request was charged. [DOC] + [EST]
 
 ### G.4 What is not documented / not yet observed
 
-- Our account's exact limits: **[UNKNOWN]** until a key is supplied and the probe runs.
+- Our account's exact limits: **[MEASURED]** RPM 30, TPM 8,000, RPD 1,000 (TPD 200,000
+  is documentation only, not in headers).
 - Whether our account has separate ITPM/OTPM limits: **[UNKNOWN]**; the docs say some
   organisations do and the limits page shows an "X in / Y out" breakdown.
 - In-flight concurrency limit: **[UNKNOWN]**; the docs do not publish one. Our application
   cap is a design choice, not a provider limit.
-- Recovery time after a 429: **[UNKNOWN]** until measured.
-- The exact 429 body shape for our account: [DOC] describes `429 Too Many Requests`; body
-  details are recorded by the probe when available.
+- Recovery time after a 429: **[MEASURED]** ~2 s for RPM (429 body: "Please try again in 2s");
+  TPM recovery 44–58 s (from `x-ratelimit-reset-tokens`).
+- The exact 429 body shape for our account: **[MEASURED]** —
+  `{"error":{"message":"Rate limit reached for model ... on requests per minute (RPM):
+  Limit 30, Used 30, Requested 1. Please try again in 2s.", "type":"requests",
+  "code":"rate_limit_exceeded"}}`. Recorded in `logs/probe.jsonl`.
 
 ---
 
@@ -475,7 +479,7 @@ Timestamps are UTC.
 
 | Experiment | Date | Requests | Concurrency | Result |
 |---|---|---|---|---|
-| `probe --requests 3` | 2026-11-11 06:12 | 3 | 1 | 3/3 HTTP 200. Totals 891 / 359 / 563 ms. 86 input + 8 output tokens each. Headers: `limit-requests: 1000`, `limit-tokens: 8000`; remaining tokens 7906 → 7898 → 7849; remaining requests 999 → 997. |
+| `probe --requests 31` (RPM test) | 2026-11-11 | 31 | 1 (sequential) | 30/31 HTTP 200; 31st returned HTTP 429 "Limit 30, Used 30, Requested 1. Please try again in 2s." Recovery ~2 s (rolling window). Confirms RPM=30 is a hard limit. Cost ~2,914 tokens. |
 | Single `ask` (A01) | 2026-11-11 06:20 | 1 | 1 | Verified answer with `[S1]`, 2,110 in / 59 out, TTFT 782 ms, total 875 ms. |
 | Real balanced quality run (v1/v2) | 2026-11-11 06:14–06:29 | 10 written rows | 1 | **Aborted.** Four requests were rejected by the app-side quota manager because of a milliseconds/seconds deadline bug, and one timed out at the 60 s harness deadline during normal TPM pacing. Fixed; see L. |
 | Real balanced quality run (v3) | 2026-11-11 06:31 onward | 23 planned | 1 | See section J for the final table. |
