@@ -46,13 +46,13 @@ Limits observed from live `x-ratelimit-*` headers (probe, 3× HTTP 200):
 
 | Limit | Value found | How found | Confidence |
 |---|---|---|---|
-| Requests per minute | 30 (documented) | documentation; not directly header-observed | medium |
+| Requests per minute | 30 | measured: 30 succeeded, 31st returned HTTP 429 "Limit 30, Used 30, Requested 1" | high |
 | Tokens per minute | 8,000 | `x-ratelimit-limit-tokens: 8000` | high |
 | Requests per day | 1,000 | `x-ratelimit-limit-requests: 1000` | high |
 | Tokens per day | 200,000 | documentation | medium |
 | Requests in flight at once | not measured | — | — |
-| What it returns when a limit is hit | delayed (TPM window) / rejected (queue/deadline) | observed: 44–58 s waits, no 429 seen | low |
-| Time until it recovers | 44–58 s (TPM window) | `x-ratelimit-reset-tokens` | medium |
+| What it returns when a limit is hit | HTTP 429 with `retry-after` ~2 s (RPM); delayed (TPM window) / rejected (queue, deadline) | observed: 31st request returned 429 "Please try again in 2s"; 44–58 s TPM waits | high |
+| Time until it recovers | ~2 s (RPM) / 44–58 s (TPM window) | 429 response + `x-ratelimit-reset-tokens` | high |
 
 The single real measurement that matters: with a ~2,000-token prompt, the TPM
 window admits about three calls per minute. The fourth waits **44–58 s** for
