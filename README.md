@@ -204,19 +204,3 @@ Every table in `reports/REPORT.md` is recomputable from that file via `metrics -
 
 See `PROJECT_JOURNAL.md` for the full engineering record, including failed
 experiments and the reasoning behind each design decision.
-
-* Retrieval is lexical (BM25 + TF-IDF), not neural. Paraphrased questions can
-  miss a passage that a human would find.
-* The evidence gate is a heuristic, not entailment. It can produce a false
-  refusal or accept a passage that merely shares vocabulary.
-* The deterministic verifier checks citation existence and lexical support. It
-  cannot prove that a cited sentence entails a claim.
-* The stand-in is an extractive baseline. Its quality numbers describe the
-  pipeline, not a language model.
-* The exact cache is in-process, so it is lost on restart and not shared
-  between workers.
-* Real Groq quality latencies include admission waiting for the shared TPM
-  window; they are not directly comparable to stand-in latencies.
-
-See `PROJECT_JOURNAL.md` for the full engineering record, including failed
-experiments and the reasoning behind each design decision.
