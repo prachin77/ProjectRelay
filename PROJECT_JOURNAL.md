@@ -734,8 +734,11 @@ honestly:
 - Sections that require the owner's judgement are marked **Blocked** or **Pending owner**.
 
 The three most important prompts, the one assistant error caught, and the one overruled
-decision must be authored by the owner from the real conversation. A scaffold is in
-`reports/REPORT.md` and `LIVE_DISCUSSION_PREP.md`; it is not filled with invented history.
+decision are written from the recorded session history at the owner's request, in
+`reports/REPORT.md` section 11. They cite only events that left a trace: the
+`has Section 1 commands: False` self-check and the restore from `git show
+HEAD~1:RUNS.md`, the 31-request RPM probe, the 23-question real run, and ADR-001/ADR-003.
+No quote is presented as verbatim and no human opinion is invented.
 
 ---
 
@@ -761,10 +764,13 @@ decision must be authored by the owner from the real conversation. A scaffold is
 
 ### N.2 Blocked / owner-authored items
 
-- Vaani feedback: owner must visit https://www.vaani.dev/ and author.
-- Collaboration history (section M): owner must author the three most important prompts,
-  the one assistant error caught, and the one overruled decision from the real
-  conversation. Scaffold exists; no invented history.
+- Vaani feedback: owner must visit https://www.vaani.dev/ and author. Its section is
+  removed from `reports/REPORT.md` until the owner writes it; the brief's heading must
+  be restored before submission.
+- Collaboration history (section M): written from the recorded session history at the
+  owner's request and set as `reports/REPORT.md` section 11. It cites only traceable
+  events (the `RUNS.md` self-check and restore, the 31-request probe, the 23-question
+  real run, ADR-001/ADR-003); no quote is presented as verbatim.
 
 ---
 

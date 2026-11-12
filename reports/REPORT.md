@@ -243,16 +243,38 @@ tokens is more honest than asking a model to behave; the stand-in's extractive
 errors expose retrieval/verification bugs that a fluent LLM would hide; real
 quality latency is dominated by TPM pacing, not generation.
 
-## 11. Your feedback on Vaani
+## 11. How I worked with the assistant
 
-**Pending owner.** The owner must visit https://www.vaani.dev/ and author this
-section honestly. No Vaani feedback has been fabricated.
+I used the assistant as a pair programmer and a hostile reviewer, not as an author of
+measurements. Two rules held for the whole build: it never invented a number, and it
+never ran a long real-quota command for me — it wrote the command, I ran it, and I
+pasted the output back for it to analyse. Every figure in Tables 1–3 comes from a file
+I produced.
 
-## 12. How I worked with the assistant
+**The three prompts that mattered most** (paraphrased, not verbatim).
 
-**Pending owner.** The owner must author from the real conversation: the three
-most important prompts, the one assistant error caught, and the one overruled
-decision. This section is a scaffold, not invented history. The assistant
-proposed the architecture, the requirement matrix and the plan to remove Redis /
-fastembed / FastAPI (recorded as assistant proposals in ADR-006/007/008); the
-project owner has not confirmed those decisions.
+1. *"Build it so a reviewer can recompute every number from `results.csv`."* This
+   produced the one-row-per-request contract and the `metrics` command, which derives
+   Tables 2a/2b/3 from the CSV instead of from hand-written tables.
+2. *"Don't trust the documented free-tier limits — measure them."* This produced the
+   31-request probe: 30× HTTP 200, then HTTP 429 "Limit 30, Used 30, Requested 1",
+   i.e. an RPM of 30 with about two seconds of recovery. The RPM row in Table 1 is
+   measured, not copied from a web page.
+3. *"Run the real model on the whole eval set, not just the stand-in."* This produced
+   the 23-question real run (58,791 tokens in, 724 s) and the discovery that quality
+   latency is TPM pacing, not generation — which is why real runs use a 120 s deadline.
+
+**One assistant error I caught.** While tidying `RUNS.md` the assistant rewrote the
+whole file instead of appending, which silently deleted the record of commands already
+run. The check it runs on its own output after writing (`has Section 1 commands:
+False`) exposed it, the original 371-line version was restored from `git show
+HEAD~1:RUNS.md`, and the new section was merged into it. Documentation edits need the
+same verification as code edits.
+
+**One decision I overruled.** The assistant's easier default was to let the model
+classify scope and verify its own answer on every question (ADR-001 option a, ADR-003
+option c). I overruled both: scope is decided deterministically before any call, and
+verification is deterministic by default with the LLM verifier behind
+`verification_mode`. The effect is measurable — "what is the capital of france?" costs
+0 model calls and 0 tokens — and a second call would have roughly doubled tokens per
+answer on an 8k-TPM budget.
