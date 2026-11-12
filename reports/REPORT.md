@@ -245,7 +245,25 @@ is more honest than asking a model to behave; the stand-in's extractive errors e
 retrieval and verification bugs that a fluent model would hide; and on this free tier,
 answer latency is set by token pacing, not by generation.
 
-## 11. How I worked with the assistant
+## 11. Your feedback on Vaani
+
+**What stood out.** you did not just gave a simple prompt which is unambigous but
+crafted it in a way where one needs to figure out by going through it more than once (for
+me it was 2 times). But despite being its ambiguity you made sure that its still pretty
+descriptive and clear where one do not have to guess and create thier own metrics. It
+also tested atleast me to discover new things.
+
+**What confused me.** I think some of the metrics like p50,p95,p99 confused me initially
+but eventually i understood them. also this specific line "A short live conversation
+follows where you explain your results and change your system, so only submit what you
+can defend." confused me where i thought to provide a recording of the walkthrough while
+submitting, but that was not the case.
+
+**One thing I would change.** I'd not change the text, but I'd like to provide an add on
+like I'd add some visuals for people to understand it more clearly otherwise the problem
+statement was pretty nice.
+
+## 12. How I worked with the assistant
 
 I used the assistant as a pair programmer and a hostile reviewer, not as an author of
 measurements. Two rules held for the whole build: it never invented a number, and it

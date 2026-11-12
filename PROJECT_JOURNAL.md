@@ -772,13 +772,10 @@ the third is quoted from the brief; nothing is invented.
 
 ### N.2 Blocked / owner-authored items
 
-- Vaani feedback: owner must visit https://www.vaani.dev/ and author. Its section is
-  removed from `reports/REPORT.md` until the owner writes it. In the brief it is the
-  heading after "What I'm unsure about..." and before "How I worked with the assistant",
-  so it becomes section 11 and the collaboration section becomes 12. Brief wording:
-  "One more heading: Your feedback on Vaani. Visit https://www.vaani.dev/ and tell us
-  what you honestly think, in a few lines: what stood out, what confused you, and one
-  thing you would change. There is no right answer."
+- Vaani feedback: **written** in `reports/REPORT.md` section 11, verbatim as the owner
+  dictated it, with the brief's three prompts as labels. It responds to the assignment
+  brief rather than to the vaani.dev product, which is the owner's call; the section
+  heading is the brief's.
 - Collaboration history (section M): written from the recorded session history at the
   owner's request and set as `reports/REPORT.md` section 11. It cites only traceable
   events (the `RUNS.md` self-check and restore, the 31-request probe, the 23-question
