@@ -247,27 +247,19 @@ answer latency is set by token pacing, not by generation.
 
 ## 11. Your feedback on Vaani
 
-### 11.1 The product
+what stood out to me is its versitality like there are different providers, voices, and
+also ability to create your own voice. Plus there are many options to customize your
+agent and how it to steer it according to your own use.
 
-<!-- Owner: product feedback pending; to be supplied by the owner. -->
+whats confusing is there are 2 tools like hold call and entities extraction. so the hold
+call tool i think it should be something that agents should inherintely take care off
+rather than create a sepeate tool for it. also for entities extraction the same thing
+should happen which the LLM/agent should inherently take care off. this will reduce the
+complexity for people who're using the platform for them to easily setup.
 
-### 11.2 The project brief
-
-**What stood out.** you did not just gave a simple prompt which is unambigous but
-crafted it in a way where one needs to figure out by going through it more than once (for
-me it was 2 times). But despite being its ambiguity you made sure that its still pretty
-descriptive and clear where one do not have to guess and create thier own metrics. It
-also tested atleast me to discover new things.
-
-**What confused me.** I think some of the metrics like p50,p95,p99 confused me initially
-but eventually i understood them. also this specific line "A short live conversation
-follows where you explain your results and change your system, so only submit what you
-can defend." confused me where i thought to provide a recording of the walkthrough while
-submitting, but that was not the case.
-
-**One thing I would change.** I'd not change the text, but I'd like to provide an add on
-like I'd add some visuals for people to understand it more clearly otherwise the problem
-statement was pretty nice.
+I think (this might be a blunt take) but when you are registering a number you should
+also provide 2 options like verify the number and don't verify because we'll only verify
+the number of imp people and not of non-imp people.
 
 ## 12. How I worked with the assistant
 
