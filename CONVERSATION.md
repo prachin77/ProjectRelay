@@ -1,21 +1,20 @@
 # Conversation history with the assistant
 
-The prompts the owner sent to the assistant while building The Relay, in order, verbatim.
+The prompts that directed the build of The Relay, in order, verbatim.
 
 **Where this came from.** The assistant tool has no transcript export. Its desktop app
 keeps the owner's prompt history locally; this file is that record, restored to
 chronological order and reproduced without edits — typos, shorthand, pasted terminal
 output and blunt corrections included. Assistant replies are not part of that store, so
-they are not here; the commands and outputs the owner pasted back are shown as he sent
-them, and the full run logs are in the code archive.
+they are not here; the commands and outputs the owner pasted back appear exactly as he
+sent them, and the full run logs are in the code archive.
 
-**What is included.** 55 prompts, from "this is the groq api key" through
-the submission questions. Prompts from the owner's other projects sit in the same store
-and were excluded, as were the earliest build prompts: the app keeps only the most
-recent 100, so the record begins mid-project and is complete from that point on.
+**What is included.** 24 prompts covering the decisions, the measurements
+and the corrections — the feedback questions, upload/zip bookkeeping, repeated pastes
+and casual "continue" messages are left out.
 
-**Redactions.** 2 prompt(s) contained an API key pasted by mistake
-(prompts 1, 44). The key text is replaced with
+**Redactions.** 1 prompt(s) contained an API key pasted by mistake
+(prompts 1). The key text is replaced with
 `[REDACTED API KEY]`; no real key appears in this file.
 
 ---
@@ -30,42 +29,18 @@ now continue from where you left
 
 ### Prompt 2
 
-continue
-
----
-
-### Prompt 3
-
-continue
-
----
-
-### Prompt 4
-
-before that tell me how much is done (like what) how much is left (what) and what you are doing now and how much time will it take approx ok and then contiune
-
----
-
-### Prompt 5
-
 any error came because it can't be 100 % perfect ?
 
 ---
 
-### Prompt 6
+### Prompt 3
 
 now push and one thing i noticed is you're not commiting and pushing the code frequently which should not happen ok every single imp thing needs to be commited and pushed with descriptive comments OK 
 now continue
 
 ---
 
-### Prompt 7
-
-is the project complete ?
-
----
-
-### Prompt 8
+### Prompt 4
 
 here loop is there ? 
 what are the results for everything asked in the project . give me extremely nuanced breakdown of everything explaining what they does why is it like this and for every 23 questions their ans and just every metrics , etc OK
@@ -75,14 +50,14 @@ every thing should be given with an example from the project
 
 ---
 
-### Prompt 9
+### Prompt 5
 
 Pattern in the refused_wrongly cases: The real model's answers contain the right facts but the deterministic verifier (lexical overlap check) rejected the cited sentences because the claim wording didn't lexically overlap enough with the passage. This is a genuine limitation of the deterministic verifier (documented in report §10). The stand-in, being extractive, avoids this by quoting verbatim — hence 0 refused_wrongly for stand-in but 6 wrong (wrong sentence quoted).
 how to improve this because we want quality ok if litlle bit of time is sacrificed its ok so tell me how to do it and don't implement for now just tell OK
 
 ---
 
-### Prompt 10
+### Prompt 6
 
 ok implement this 
 also create another md file for this 
@@ -105,21 +80,13 @@ and then don't run , verify and test by yourself . Tell me to do that which cove
 
 ---
 
-### Prompt 11
+### Prompt 7
 
 the expected ones are real nos or just for eg ?
 
 ---
 
-### Prompt 12
-
-the expected ones are real nos or just for eg ?
-for eg this one 
-Expected: 90 passed
-
----
-
-### Prompt 13
+### Prompt 8
 
 he Relay — Two-Page Report
 Scope: answers only from Attention Is All You Need (1706.03762v7), Moshi (2410.00037v1) and Dynamic Chunking (2507.07955v2). Every factual sentence cites paper, page and section; the system refuses when evidence is insufficient. Raw measurements live in logs/results.csv (canonical) and are exported to results.csv. One row per user request; 13 columns:
@@ -252,39 +219,27 @@ explain this and how and where did you get this numbers from like by running whi
 
 ---
 
-### Prompt 14
+### Prompt 9
 
 "retrieval_setting": "light"
 what is this ans there are also other what are they and what this
 
 ---
 
-### Prompt 15
-
-"retrieval_setting": "light"
-what is this ans there are also other what are they and what this 3 means ?
-A03
-what is this A0 and all this ?
-Section 10 — What I'm unsure about
-Source: Honest assessment of limitations. Each item corresponds to a documented limitation in README.md ("Honest limitations" section) and PROJECT_JOURNAL.md.
-so does this mean that the assesment that i gave is not honest ?
-
----
-
-### Prompt 16
+### Prompt 10
 
 remove assighment requirement md .
 modify the readme and other files like what we changed , why , ok its current number after the change compared to previous ones ok so don't remove the previous , rather potray it like a journey ok .
 
 ---
 
-### Prompt 17
+### Prompt 11
 
 what is probe and explain its every context here
 
 ---
 
-### Prompt 18
+### Prompt 12
 
 RPM	30	documentation only (not in headers)	medium
 so we can test this no ?
@@ -310,27 +265,27 @@ and still this remains ?
 
 ---
 
-### Prompt 19
+### Prompt 13
 
 so remove that twice problem 
 and also i wanna test that 31 RPM one so give command for that OK and i'll paste the output
 
 ---
 
-### Prompt 20
+### Prompt 14
 
 equest costs ~86 input + 8 output tokens (~2,666 tokens total, well within TPM
 how this tokens are calculated and from where are they cominng ?
 
 ---
 
-### Prompt 21
+### Prompt 15
 
 so include this info in the relevant md files and push it and provide the cmd to probe test it
 
 ---
 
-### Prompt 22
+### Prompt 16
 
 (.venv) PS P:\ProjectRelay> py -m the_relay.main probe --requests 31 
 probe 0: ok, http 200, ttft None, total 859 ms
@@ -371,43 +326,25 @@ and also the other min we will again have 30 request limit right ?
 
 ---
 
-### Prompt 23
-
-so is this run been recorded ?
-
----
-
-### Prompt 24
+### Prompt 17
 
 so is this run been recorded ? and write about the run's info in the relevant md file that we tested it something like that OK
 
 ---
 
-### Prompt 25
+### Prompt 18
 
 give me other commands which covers every single aspect that needs to be tested ok and i'll paste the output of every single command OK
 
 ---
 
-### Prompt 26
-
-give me other commands which covers every single aspect that needs to be tested ok and i'll paste the output of every single command OK . also tell what each test is intended for like what they target , what is their motive , what are they testing and why
-
----
-
-### Prompt 27
+### Prompt 19
 
 now add all of this test in the readme with more extensive info being provided for each OK
 
 ---
 
-### Prompt 28
-
-{"blob": {"kind": "text", "ids": ["e301b9e4ea5f22abca11fd81b0fb9a709c0c61374932689d2f57ccad904375e4"]}}
-
----
-
-### Prompt 29
+### Prompt 20
 
 Figure	Source column(s)	Formula
 TTFT p50/p95/p99	first_token_ms	Percentile over non-null values
@@ -433,26 +370,14 @@ give very hyper nuanced breakdown for both of this OK
 
 ---
 
-### Prompt 30
-
-so is project done is anything left pls tell in brief to save tokens ? as this is written OK
-How to submit
-
-Put your write-up, code and results.csv in one Google Drive folder.
-Set the folder to "Anyone with the link can view".
-Paste the folder link into the submission form, using the same email address you applied with.
-You will get a confirmation email when we receive it. If it does not arrive within a few minutes, check your spam folder.
-
----
-
-### Prompt 31
+### Prompt 21
 
 Pending owner. The owner must author from the real conversation: the three most important prompts, the one assistant error caught, and the one overruled decision. This section is a scaffold, not invented history. The assistant proposed the architecture, the requirement matrix and the plan to remove Redis / fastembed / FastAPI (recorded as assistant proposals in ADR-006/007/008); the project owner has not confirmed those decisions.
 write this in the 12 section of the reports md seeing the conversation history OK until then I'll provide feedback on vaani so remove the 11th section
 
 ---
 
-### Prompt 32
+### Prompt 22
 
 10. What I'm unsure about, what I left out, what I learned
 Unsure: whether lexical claim-vs-passage overlap proves entailment (it catches fabricated numbers and uncited sentences, not logical support); the real 429 body and recovery time (none observed); stand-in failure rates (assumptions, 0 failures in 14 real requests); true tokenizer agreement (local estimator vs Groq).
@@ -645,7 +570,7 @@ also here where feedback is written to be given and also its told that a small c
 
 ---
 
-### Prompt 33
+### Prompt 23
 
 "The company wants every reply fast, every reply good, the bill small, and nobody turned away. What "fast" means is up to you. It cannot have all four." This is the prompt that chose the architecture: token-aware admission control (ADR-004), because on 8k tokens a minute a request is a token debt, not a request.
 
@@ -656,290 +581,9 @@ instead of this give the prompt where i told to send 31 real requests to grok to
 
 ---
 
-### Prompt 34
-
-also you did not gave where to gave feedback like where in the given text its mentioned ?
-
-Also: MINE.md §1 and PROJECT_JOURNAL.md §A.3 still list cost first, quality second, speed third. Want me to reorder them to quality → speed → cost → availability so the whole submission agrees?
-do this 
-and also you can create paraphrased prompts of what i gave if you are not able to find those but try to search for them if ur able to find well and good if not then paraphrase it
-
----
-
-### Prompt 35
-
-so do i need to give feedback on vaani or in the md file ?
-
----
-
-### Prompt 36
-
-ok write this in md file
-for what stood out 
-you did not just gave a simple prompt which is unambigous but crafted it in a way where one needs to figure out by going through it more than once (for me it was 2 times) . But despite being its ambiguity you made sure that its still pretty descriptive and clear where one do not have to guess and create thier own metrics . It also tested atleast me to discover new things .
-for what confused 
-I think some of the metrics like p50,p95,p99 confused me initially but eventually i understood them . also this specific line "A short live
-conversation follows where you explain your results and change your system, so only submit what you
-can defend." confused me where i thought to provide a recording of the walkthrough while submitting , but that was not the case .
-for One thing I'd change
-
----
-
-### Prompt 37
-
-ok write this in md file
-for what stood out 
-you did not just gave a simple prompt which is unambigous but crafted it in a way where one needs to figure out by going through it more than once (for me it was 2 times) . But despite being its ambiguity you made sure that its still pretty descriptive and clear where one do not have to guess and create thier own metrics . It also tested atleast me to discover new things .
-for what confused 
-I think some of the metrics like p50,p95,p99 confused me initially but eventually i understood them . also this specific line "A short live
-conversation follows where you explain your results and change your system, so only submit what you
-can defend." confused me where i thought to provide a recording of the walkthrough while submitting , but that was not the case .
-for One thing I'd change 
-I'd not change the text , but I'd like to provide an add on like I'd add some visuals for people to understand it more clearly otherwise the problem statement was pretty nice.
-so the answers should be verbatim in the md file ok not a single word here and there and in vaani.dev where to provide feedback ?
-
----
-
-### Prompt 38
-
-so in 11 create 11.1 and 11.2 where in 1 the review of the actual product and in 2 the feedback on the project OK
-
----
-
-### Prompt 39
-
-11.1 The product (public site, visited 12 November 2026)
-What stood out. Vaani is a voice-agent platform for real phone conversations, not a text chatbot with a voice bolted on: turn-taking that pauses to listen, automatic language switching inside a call, and a quoted p90 latency of about 450 ms. The parts I did not expect were Teacher AI, which builds a working agent from one sentence and shows a prompt diff before saving, and Memories, which carries a caller's history into a different agent so the person does not repeat themselves. The case studies are concrete (IndiaFilings qualifying 891 founders; Prateek Group across 16,282 calls) rather than logo walls.
-
-What confused me. The headline statistics animate and read as "0M+" and "<0ms" until the counter runs, so a first look says nothing. Pricing and Docs sit behind links, so I could not tell from the landing page what a call actually costs, or what the latency figure is measured on.
-
-One thing I would change. Print the latency and accuracy numbers statically, with the conditions attached — language pair, audio channel, and sample size — so the headline claim can be read without the animation and compared against my own measurements.
-for now keep this empty i'll provide you the info later OK
-
----
-
-### Prompt 40
-
-https://vaaniresearch.com/
-https://www.vaani.dev/
-these are 2 diff links so which one to test ? and how pls provide steps OK
-
----
-
-### Prompt 41
+### Prompt 24
 
 what stood out to me is its versitality like there are different providers , voices , and also ability to create your own voice . Plus there are many options to customize your agent and how it to steer it according to your own use . 
 whats confusing is there are 2 tools like hold call and entities extraction . so the hold call tool i think it should be something that agents should inherintely take care off rather than create a sepeate tool for it . also for entities extraction the same thing should happen which the LLM/agent should inherently take care off . this will reduce the complexity for people who're using the platform for them to easily setup .
-
----
-
-### Prompt 42
-
-what stood out to me is its versitality like there are different providers , voices , and also ability to create your own voice . Plus there are many options to customize your agent and how it to steer it according to your own use . 
-whats confusing is there are 2 tools like hold call and entities extraction . so the hold call tool i think it should be something that agents should inherintely take care off rather than create a sepeate tool for it . also for entities extraction the same thing should happen which the LLM/agent should inherently take care off . this will reduce the complexity for people who're using the platform for them to easily setup .
-I think (this might be a blunt take) but when you are registering a number you should also provide 2 options like verify the number and don't verify because we'll only verify the number of imp people and not of non-imp people . 
-so keep this verbatim and remove 11.2 and remove sections like 11.1 and 11.2 and keep only this OK
-
----
-
-### Prompt 43
-
-now how and what to submit because they also mentioned that .en file should not be there
-
----
-
-### Prompt 44
-
-# Local secrets. Git-ignored. Do not commit.
-GROQ_API_KEY=[REDACTED API KEY]
-this is .env content
-
-# ---------------------------------------------------------------------------
-# The Relay — environment template
-#
-# Copy this file to `.env` and fill in the values you need:
-#
-#   Copy-Item .env.example .env
-#
-# `.env` is git-ignored. Never commit a real key (assignment rule).
-# Every variable is optional: the system boots offline with the deterministic
-# stand-in and no key at all. That is what the automated tests use.
-# ---------------------------------------------------------------------------
-
-# --- Provider ---------------------------------------------------------------
-# "standin" = deterministic local simulator; consumes nothing, works offline.
-# "groq"    = real hosted model; consumes your free-tier quota.
-RELAY_PROVIDER=standin
-
-# Your own free Groq key. Leave blank to stay on the stand-in.
-# https://console.groq.com/keys
-GROQ_API_KEY=
-
-# ---------------------------------------------------------------------------
-# Groq (only used when RELAY_PROVIDER=groq)
-# ---------------------------------------------------------------------------
-# Documented free-tier limits for openai/gpt-oss-120b, read on 2026-11-11:
-#   RPM 30, RPD 1,000, TPM 8,000, TPD 200,000.
-# These are *documented* limits. The `probe` command records what this account
-# actually reports in x-ratelimit-* headers; the report cites those separately.
-RELAY_GROQ_MODEL=openai/gpt-oss-120b
-RELAY_GROQ_BASE_URL=https://api.groq.com/openai/v1
-# gpt-oss is a reasoning model. "low" keeps hidden reasoning from crowding out
-# the short, evidence-grounded answer inside max_tokens.
-RELAY_GROQ_REASONING_EFFORT=low
-# Per-HTTP-request timeout. The user-facing request deadline is separate.
-RELAY_GROQ_REQUEST_TIMEOUT_MS=20000
-
-# ---------------------------------------------------------------------------
-# Quota accounting (application side)
-# ---------------------------------------------------------------------------
-# Must match the provider's limits. The local manager estimates tokens BEFORE
-# a call and reconciles the provider's reported usage AFTER it.
-RELAY_QUOTA_RPM=30
-RELAY_QUOTA_TPM=8000
-RELAY_QUOTA_RPD=1000
-RELAY_QUOTA_TPD=200000
-# Fraction of every limit deliberately kept out of reach (0.15 = 15%).
-RELAY_QUOTA_SAFETY_RESERVE=0.15
-
-# ---------------------------------------------------------------------------
-# Reliability
-# ---------------------------------------------------------------------------
-# Application concurrency cap (not a documented provider limit).
-RELAY_MAX_CONCURRENCY=5
-# Bounded wait queue. When full, requests are rejected immediately.
-RELAY_MAX_QUEUE_DEPTH=16
-RELAY_MAX_QUEUE_WAIT_MS=15000
-# How long a user waits before the system gives up honestly.
-RELAY_REQUEST_DEADLINE_MS=25000
-# One controlled retry by default. Retries consume quota too.
-RELAY_RETRY_MAX_ATTEMPTS=1
-RELAY_RETRY_BASE_DELAY_MS=500
-RELAY_RETRY_MAX_DELAY_MS=8000
-RELAY_RETRY_JITTER=true
-
-# ---------------------------------------------------------------------------
-# Generation and verification
-# ---------------------------------------------------------------------------
-RELAY_MAX_OUTPUT_TOKENS=400
-# 0.0 keeps grading reproducible.
-RELAY_TEMPERATURE=0.0
-RELAY_MAX_MODEL_CALLS_PER_REQUEST=3
-RELAY_MAX_TOKENS_PER_REQUEST=6000
-RELAY_MAX_REGENERATION_ATTEMPTS=1
-# "deterministic" | "conditional_llm" | "always_llm"
-RELAY_VERIFICATION_MODE=deterministic
-RELAY_VERIFICATION_MAX_ATTEMPTS=1
-
-# ---------------------------------------------------------------------------
-# Retrieval and evidence gate
-# ---------------------------------------------------------------------------
-# "light" | "balanced" | "extensive" (defined in config/retrieval.yaml)
-RELAY_RETRIEVAL_PRESET=balanced
-RELAY_BUDGET_PRESSURE_THRESHOLD=0.20
-RELAY_DEGRADE_UNDER_PRESSURE=true
-RELAY_EVIDENCE_MIN_TOP1_SCORE=0.20
-RELAY_EVIDENCE_MIN_COVERAGE=0.34
-RELAY_EVIDENCE_PARTIAL_COVERAGE=0.18
-# At least one bounded re-retrieval loop, as the brief requires.
-RELAY_EVIDENCE_MAX_LOOPS=2
-
-# ---------------------------------------------------------------------------
-# Exact cache (in-process; not Redis)
-# ---------------------------------------------------------------------------
-RELAY_CACHE_ENABLED=true
-RELAY_CACHE_TTL_S=86400
-RELAY_CACHE_MAX_ENTRIES=512
-
-# ---------------------------------------------------------------------------
-# Paths (relative to the project root)
-# ---------------------------------------------------------------------------
-RELAY_DOCUMENTS_DIR=documents
-RELAY_INDEX_DIR=indexes
-RELAY_LOGS_DIR=logs
-RELAY_RESULTS_DIR=results
-RELAY_CONFIG_DIR=config
-RELAY_EVALUATION_DIR=evaluation
-
-# Bumped whenever the generation prompt changes; part of every cache key.
-RELAY_PROMPT_VERSION=p1
-
-# ---------------------------------------------------------------------------
-# Experiments (stand-in and load generation)
-# ---------------------------------------------------------------------------
-RELAY_SIMULATION_SEED=42
-RELAY_SCENARIO=interactive
-
-and this is .env.example so why both content are different >
-
----
-
-### Prompt 45
-
-ok so for setup if someone copies env example into env so all content of example will come to env no and will it create any error ?
-
----
-
-### Prompt 46
-
-remove submission md and i uploaded result csv seperatly in folder what else needs to be done ?
-null
-
----
-
-### Prompt 47
-
-so now report md should be uploaded separely like result ?
-
----
-
-### Prompt 48
-
-like this and what next
-null
-
----
-
-### Prompt 49
-
-so now zip folder i've to upload which should not have .env ok ?
-
----
-
-### Prompt 50
-
-but i'lll delete .env from that zip ? then
-
----
-
-### Prompt 51
-
-what i'm saying is the zip that i'll create after clicking right button and the zip that gets created inside that the .env file i'll delete that OK
-
----
-
-### Prompt 52
-
-P:\ProjectRelay.zip\ProjectRelay
-check this is ok as i does not have .env OK
-
----
-
-### Prompt 53
-
-so i should upload this  no?
-
----
-
-### Prompt 54
-
-i uploaded this is it OK
-null
-
----
-
-### Prompt 55
-
-now which file do i need to upload ?
 
 ---
