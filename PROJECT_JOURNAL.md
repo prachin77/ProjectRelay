@@ -54,12 +54,19 @@ The brief requires:
 
 ### A.3 Primary optimization priorities
 
-1. **Low cost** — minimise model calls, input/output tokens, redundant retrieval and
-   verification, and retry waste.
-2. **Quality** — evidence-grounded answers, accurate citations, correct refusal, no
-   unsupported claims.
-3. **Speed** — TTFT, total latency, queue wait, stage timings.
-4. **Availability** — honest communication, never fabricated answers to stay up.
+Two goals are actively optimised; the other two are what I trade away when they conflict.
+
+1. **Quality** — evidence-grounded answers, accurate citations, correct refusal, no
+   unsupported claims. Verification is never skipped to save tokens.
+2. **Speed** — TTFT, total latency, queue wait, stage timings. Where speed and quality
+   conflict, the request waits (up to `request_deadline_ms`) rather than degrading.
+3. **Cost** (traded away) — one generation call, deterministic verification by default,
+   refusal before any model call, exact cache.
+4. **Availability** (traded away) — honest communication, never fabricated answers to stay
+   up, no request kept alive past its deadline.
+
+This order replaces the earlier cost-first ordering recorded in this journal; it is the
+order the owner stated and the order `MINE.md` now uses.
 
 The binding constraint discovered from the provider documentation is **TPM = 8,000
 tokens/minute** and **TPD = 200,000 tokens/day**, not RPM = 30. This is recorded in
@@ -738,8 +745,8 @@ decision are written from the recorded session history at the owner's request, i
 `reports/REPORT.md` section 11. They cite only events that left a trace: the
 `has Section 1 commands: False` self-check and the restore from `git show
 HEAD~1:RUNS.md`, the 31-request RPM probe, the 23-question real run, and ADR-001/ADR-003.
-The three prompts are quoted **verbatim from the owner's instructions**, including the
-brief text; nothing is reconstructed from memory or invented.
+The first two prompts are paraphrases — the original chat text was not recoverable — and
+the third is quoted from the brief; nothing is invented.
 
 ---
 
@@ -766,8 +773,12 @@ brief text; nothing is reconstructed from memory or invented.
 ### N.2 Blocked / owner-authored items
 
 - Vaani feedback: owner must visit https://www.vaani.dev/ and author. Its section is
-  removed from `reports/REPORT.md` until the owner writes it; the brief's heading must
-  be restored before submission.
+  removed from `reports/REPORT.md` until the owner writes it. In the brief it is the
+  heading after "What I'm unsure about..." and before "How I worked with the assistant",
+  so it becomes section 11 and the collaboration section becomes 12. Brief wording:
+  "One more heading: Your feedback on Vaani. Visit https://www.vaani.dev/ and tell us
+  what you honestly think, in a few lines: what stood out, what confused you, and one
+  thing you would change. There is no right answer."
 - Collaboration history (section M): written from the recorded session history at the
   owner's request and set as `reports/REPORT.md` section 11. It cites only traceable
   events (the `RUNS.md` self-check and restore, the 31-request probe, the 23-question

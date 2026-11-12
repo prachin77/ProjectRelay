@@ -8,22 +8,10 @@ without touching Python.
 
 ## 1. What I focus on (MINE)
 
-### Low cost
-- Controlled token consumption and API usage.
-- Token-aware admission control (not request-count): the 8,000 TPM window binds
-  long before the 30 RPM limit, so a request-count gate would admit two calls
-  and then hit a 429.
-- Safety reserve of 15% on every limit; bounded retry (max 1) honouring
-  `retry-after` and the user deadline.
-- Exact in-process cache keyed on normalised question + corpus + prompt + model
-  + settings; cache hits cost zero tokens.
-- Refusal before spending tokens: scope filter and evidence gate run before any
-  model call. Out-of-scope and insufficient-evidence questions never reach the
-  provider.
-- Budget caps per request: `max_model_calls_per_request=3`,
-  `max_tokens_per_request=6000`, `max_regeneration_attempts=1`.
+Two of the brief's four goals matter most to me: **quality**, then **speed**. Cost and
+availability are the two I choose to trade away when they conflict with those.
 
-### Quality
+### Quality (first)
 - Correct, grounded, well-cited answers.
 - Every factual sentence carries at least one `[S#]` citation; `correct` requires
   a citation plus all required fact groups.
@@ -31,14 +19,39 @@ without touching Python.
   uncited sentences; optional LLM verification behind `verification_mode`.
 - Honest refusal over fabricated availability: "I don't know" beats a fluent lie.
 - Partial answers keep only supported sentences plus an explicit gap.
+- Verification is never skipped to save tokens, and the pipeline never sends a
+  weaker answer to be faster.
 
-### Availability
+### Speed (second)
+- Time to first token and total time are the second goal. Where quality and speed
+  conflict, the request waits (up to `request_deadline_ms`) rather than degrading.
+- Token-aware admission control (not request-count): the 8,000 TPM window binds
+  long before the 30 RPM limit, so a request-count gate would admit two calls
+  and then hit a 429.
+- Safety reserve of 15% on every limit; bounded retry (max 1) honouring
+  `retry-after` and the user deadline — a backoff that would cross the deadline is
+  declined instead of stalling the caller.
+- Exact in-process cache keyed on normalised question + corpus + prompt + model
+  + settings: a hit returns in about a millisecond and removes a provider round
+  trip entirely.
+
+### Cost (third — the goal I trade away)
+- Refusal before spending tokens: scope filter and evidence gate run before any
+  model call. Out-of-scope and insufficient-evidence questions never reach the
+  provider.
+- One generation call per answer; deterministic verification by default, LLM
+  verification only when asked for.
+- Budget caps per request: `max_model_calls_per_request=3`,
+  `max_tokens_per_request=6000`, `max_regeneration_attempts=1`.
+
+### Availability (fourth — the goal I trade away)
 - When the model is experiencing high load, say so directly — like GPT and
   Gemini do ("The model is experiencing high load, please try again shortly").
 - The user sees which situation they are in: delayed (TPM wait), rejected
   (queue full / deadline), daily budget gone, or evidence insufficient. Each has
   a distinct user-facing message in `the_relay/core/messages.py`.
 - Never invent a reset time; only mention one when the provider sent it.
+- A request is never kept alive past its deadline just to avoid a failure count.
 
 ### Scope filtering (deterministic vs. retrieval)
 - **Deterministic rules for obvious out-of-scope cases:** the scope filter

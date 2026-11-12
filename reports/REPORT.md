@@ -253,18 +253,18 @@ never ran a long real-quota command for me — it wrote the command, I ran it, a
 pasted the output back for it to analyse. Every figure in Tables 1–3 comes from a file
 I produced.
 
-**The three prompts that mattered most** (verbatim, from my instructions to the
-assistant).
+**The three prompts that mattered most** (the first two are paraphrased — the original
+chat text was not recoverable, so they state the substance rather than the wording; the
+third is quoted from the brief).
 
-1. *"2 out of the all 4 factors i wanna focus on, like they're the most imp for me,
-   which are quality and speed, and also out of those quality is most imp."* This
+1. *Focus on two of the four goals, quality and speed, with quality first.* This
    ordering chose the architecture: verification is never skipped to save tokens, a
    request waits rather than getting a weaker answer (the 120 s real-run deadline), and
    an honest refusal beats a plausible guess.
-2. *"send 31 real requests to [Groq] to test its docs metrics"* — my instruction for the
-   limit probe, which returned: 30× HTTP 200, then HTTP 429 "Limit 30, Used 30,
-   Requested 1", i.e. RPM 30 with about two seconds of recovery. The RPM row in Table 1
-   is measured, not copied from a web page.
+2. *Send 31 real requests to Groq and test the limits its documentation claims.* This
+   produced: 30× HTTP 200, then HTTP 429 "Limit 30, Used 30, Requested 1", i.e. RPM 30
+   with about two seconds of recovery. The RPM row in Table 1 is measured, not copied
+   from a web page.
 3. *"Every answer must cite where in the papers it came from. If the papers do not say,
    the assistant must say so instead of guessing."* This produced the citation contract,
    the evidence gate, and the 23-question evaluation; the real run (58,791 tokens in,
