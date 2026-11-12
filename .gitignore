@@ -32,3 +32,5 @@ scratch/
 *.db
 dump.rdb
 appendonly.aof
+
+dist/
