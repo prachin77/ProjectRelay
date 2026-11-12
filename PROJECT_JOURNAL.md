@@ -772,11 +772,11 @@ the third is quoted from the brief; nothing is invented.
 
 ### N.2 Blocked / owner-authored items
 
-- Vaani feedback: **written** in `reports/REPORT.md` section 11, split into 11.1 (the
-  product, from a read of https://www.vaani.dev/ on 2026-11-12) and 11.2 (the project
-  brief, verbatim as the owner dictated it). The 11.1 observations are limited to what
-  the public site states; no trial account was used, and the section says so. 11.2 is
-  the owner's wording, typos included, by instruction.
+- Vaani feedback: 11.2 (the project brief) is **written** verbatim as the owner dictated
+  it, typos included. 11.1 (the product) is intentionally **empty** with an HTML marker:
+  the owner will supply first-hand impressions after using https://www.vaani.dev/. An
+  earlier draft of 11.1 written from the public site was removed at the owner's request;
+  it remains in git history if wanted.
 - Collaboration history (section M): written from the recorded session history at the
   owner's request and set as `reports/REPORT.md` section 11. It cites only traceable
   events (the `RUNS.md` self-check and restore, the 31-request probe, the 23-question

@@ -247,25 +247,9 @@ answer latency is set by token pacing, not by generation.
 
 ## 11. Your feedback on Vaani
 
-### 11.1 The product (public site, visited 12 November 2026)
+### 11.1 The product
 
-**What stood out.** Vaani is a voice-agent platform for real phone conversations, not a
-text chatbot with a voice bolted on: turn-taking that pauses to listen, automatic
-language switching inside a call, and a quoted p90 latency of about 450 ms. The parts I
-did not expect were Teacher AI, which builds a working agent from one sentence and shows
-a prompt diff before saving, and Memories, which carries a caller's history into a
-different agent so the person does not repeat themselves. The case studies are concrete
-(IndiaFilings qualifying 891 founders; Prateek Group across 16,282 calls) rather than
-logo walls.
-
-**What confused me.** The headline statistics animate and read as "0M+" and "<0ms" until
-the counter runs, so a first look says nothing. Pricing and Docs sit behind links, so I
-could not tell from the landing page what a call actually costs, or what the latency
-figure is measured on.
-
-**One thing I would change.** Print the latency and accuracy numbers statically, with the
-conditions attached — language pair, audio channel, and sample size — so the headline
-claim can be read without the animation and compared against my own measurements.
+<!-- Owner: product feedback pending; to be supplied by the owner. -->
 
 ### 11.2 The project brief
 
