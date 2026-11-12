@@ -738,7 +738,8 @@ decision are written from the recorded session history at the owner's request, i
 `reports/REPORT.md` section 11. They cite only events that left a trace: the
 `has Section 1 commands: False` self-check and the restore from `git show
 HEAD~1:RUNS.md`, the 31-request RPM probe, the 23-question real run, and ADR-001/ADR-003.
-No quote is presented as verbatim and no human opinion is invented.
+The three prompts are quoted **verbatim from the brief text** the owner supplied, not
+reconstructed from memory; no human opinion is invented.
 
 ---
 

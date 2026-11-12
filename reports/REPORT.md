@@ -69,7 +69,7 @@ successful real calls:
 | base_latency_ms | 810 | real total median 812 ms (n=11, min 735, max 1,781) |
 | ttft_fraction | 0.77 | real median TTFT share 703/812 |
 | stream_chunk_ms | 0 | real stream finishes in ~0.1 s after TTFT |
-| failure_rate / timeout_probability | 0.02 / 0.01 | assumption (0 failures in 14 real requests) |
+| failure_rate / timeout_probability | 0.02 / 0.01 | chosen, not measured (real Groq: 0 failures in 24 requests; the only 429 was self-inflicted in the 31-request probe) |
 
 The stand-in cannot paraphrase; its error mode is "quoted the wrong sentence,"
 never "invented a fact." Its quality numbers describe the retrieval/verification
@@ -166,8 +166,9 @@ application's own token admission, which both providers share.
 * **Provider 429 / 5xx:** bounded retry honouring `retry-after`; declined if the
   backoff crosses the deadline or the token budget is insufficient.
 
-Real run v4 observed no 429; the direct 429 body and true recovery time remain
-**not measured**.
+The real quality run saw no 429 (23 requests, paced). The 429 was produced directly by
+the 31-request probe: HTTP 429 body `"Limit 30, Used 30, Requested 1. Please try again in
+2s."`, cleared in about 2 s — measured, in `logs/probe.jsonl`.
 
 ## 6. Retrieval: quality versus cost
 
@@ -227,21 +228,22 @@ is still empty. Default `retry_max_attempts = 1`: one controlled retry.
 
 ## 10. What I'm unsure about, what I left out, what I learned
 
-**Unsure:** whether lexical claim-vs-passage overlap proves entailment (it
-catches fabricated numbers and uncited sentences, not logical support); the real
-429 body and recovery time (none observed); stand-in failure rates (assumptions,
-0 failures in 14 real requests); true tokenizer agreement (local estimator vs
-Groq).
+**Least certain assumption:** that lexical overlap between a claim and the passage it
+cites is a usable proxy for support. It catches fabricated numbers and uncited
+sentences, not logical support. If it is wrong, the verifier lets through a confident
+sentence that misstates the paper — the one failure the brief says must never happen.
+**Second:** the stand-in's failure rates are chosen, not measured, so the load tables
+describe my stand-in's design rather than Groq's true failure distribution. Nothing
+outside those two rows depends on them.
 
-**Left out:** a neural embedding retriever (paraphrase recall is a known
-weakness, deliberately deferred), an LLM verifier A/B, an HTTP API, Redis, a
-semantic cache. None are required by the brief and each adds unverified
-complexity.
+**Left out, deliberately:** a neural embedding retriever (paraphrase recall stays weak)
+and a semantic cache (one false hit serves a wrong answer instantly). Also no LLM
+verifier A/B, no HTTP API, no Redis.
 
-**Learned:** admission control beats request counting; refusal before spending
-tokens is more honest than asking a model to behave; the stand-in's extractive
-errors expose retrieval/verification bugs that a fluent LLM would hide; real
-quality latency is dominated by TPM pacing, not generation.
+**Learned:** admission control beats request counting; refusing before spending tokens
+is more honest than asking a model to behave; the stand-in's extractive errors expose
+retrieval and verification bugs that a fluent model would hide; and on this free tier,
+answer latency is set by token pacing, not by generation.
 
 ## 11. How I worked with the assistant
 
@@ -251,30 +253,38 @@ never ran a long real-quota command for me — it wrote the command, I ran it, a
 pasted the output back for it to analyse. Every figure in Tables 1–3 comes from a file
 I produced.
 
-**The three prompts that mattered most** (paraphrased, not verbatim).
+**The three prompts that mattered most** (verbatim, quoted from the brief I gave the
+assistant).
 
-1. *"Build it so a reviewer can recompute every number from `results.csv`."* This
-   produced the one-row-per-request contract and the `metrics` command, which derives
-   Tables 2a/2b/3 from the CSV instead of from hand-written tables.
-2. *"Don't trust the documented free-tier limits — measure them."* This produced the
-   31-request probe: 30× HTTP 200, then HTTP 429 "Limit 30, Used 30, Requested 1",
-   i.e. an RPM of 30 with about two seconds of recovery. The RPM row in Table 1 is
-   measured, not copied from a web page.
-3. *"Run the real model on the whole eval set, not just the stand-in."* This produced
-   the 23-question real run (58,791 tokens in, 724 s) and the discovery that quality
-   latency is TPM pacing, not generation — which is why real runs use a 120 s deadline.
+1. *"The company wants every reply fast, every reply good, the bill small, and nobody
+   turned away. What "fast" means is up to you. It cannot have all four."* This is the
+   prompt that chose the architecture: token-aware admission control (ADR-004), because
+   on 8k tokens a minute a request is a token debt, not a request.
+2. *"Its limits are real, so find out what they are from its documentation and from what
+   it sends back when you reach one."* This produced the 31-request probe: 30× HTTP 200,
+   then HTTP 429 "Limit 30, Used 30, Requested 1", i.e. RPM 30 with about two seconds of
+   recovery. The RPM row in Table 1 is measured, not copied from a web page.
+3. *"Every answer must cite where in the papers it came from. If the papers do not say,
+   the assistant must say so instead of guessing."* This produced the citation contract,
+   the evidence gate, and the 23-question evaluation; the real run (58,791 tokens in,
+   724 s) showed that quality latency is TPM pacing, not generation.
 
-**One assistant error I caught.** While tidying `RUNS.md` the assistant rewrote the
-whole file instead of appending, which silently deleted the record of commands already
-run. The check it runs on its own output after writing (`has Section 1 commands:
-False`) exposed it, the original 371-line version was restored from `git show
-HEAD~1:RUNS.md`, and the new section was merged into it. Documentation edits need the
-same verification as code edits.
+**One thing it got wrong, and how I caught it.** Tidying `RUNS.md` it rewrote the file
+instead of appending, which silently deleted the record of commands already run. The
+post-write check on the file (`has Section 1 commands: False`) caught it before commit;
+the 371-line original was restored with `git show HEAD~1:RUNS.md` and the new section
+merged into it. Documentation gets the same verification as code.
 
-**One decision I overruled.** The assistant's easier default was to let the model
-classify scope and verify its own answer on every question (ADR-001 option a, ADR-003
-option c). I overruled both: scope is decided deterministically before any call, and
-verification is deterministic by default with the LLM verifier behind
-`verification_mode`. The effect is measurable — "what is the capital of france?" costs
-0 model calls and 0 tokens — and a second call would have roughly doubled tokens per
-answer on an 8k-TPM budget.
+**One decision I overruled.** Its easier default was to let the model classify scope and
+verify its own answer on every question (ADR-001 option a, ADR-003 option c). I overruled
+both: scope is decided deterministically before any call, and verification is
+deterministic by default with the LLM verifier behind `verification_mode`. The effect is
+measurable — "what is the capital of france?" costs 0 model calls and 0 tokens — and a
+second call would have roughly doubled tokens per answer on an 8k-TPM budget.
+
+**What is distinctly mine.** The goal ordering (cost first, then quality, with
+availability stated plainly instead of promised), the five load shapes and their
+parameters, the 23 questions and the 13/10 deterministic-versus-LLM split, the three
+retrieval presets, the 120 s real-run deadline, and the decision to publish measured
+limits rather than documented ones. The assistant wrote most of the code to those
+decisions; it did not choose them.
