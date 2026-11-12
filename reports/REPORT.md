@@ -253,17 +253,18 @@ never ran a long real-quota command for me — it wrote the command, I ran it, a
 pasted the output back for it to analyse. Every figure in Tables 1–3 comes from a file
 I produced.
 
-**The three prompts that mattered most** (verbatim, quoted from the brief I gave the
+**The three prompts that mattered most** (verbatim, from my instructions to the
 assistant).
 
-1. *"The company wants every reply fast, every reply good, the bill small, and nobody
-   turned away. What "fast" means is up to you. It cannot have all four."* This is the
-   prompt that chose the architecture: token-aware admission control (ADR-004), because
-   on 8k tokens a minute a request is a token debt, not a request.
-2. *"Its limits are real, so find out what they are from its documentation and from what
-   it sends back when you reach one."* This produced the 31-request probe: 30× HTTP 200,
-   then HTTP 429 "Limit 30, Used 30, Requested 1", i.e. RPM 30 with about two seconds of
-   recovery. The RPM row in Table 1 is measured, not copied from a web page.
+1. *"2 out of the all 4 factors i wanna focus on, like they're the most imp for me,
+   which are quality and speed, and also out of those quality is most imp."* This
+   ordering chose the architecture: verification is never skipped to save tokens, a
+   request waits rather than getting a weaker answer (the 120 s real-run deadline), and
+   an honest refusal beats a plausible guess.
+2. *"send 31 real requests to [Groq] to test its docs metrics"* — my instruction for the
+   limit probe, which returned: 30× HTTP 200, then HTTP 429 "Limit 30, Used 30,
+   Requested 1", i.e. RPM 30 with about two seconds of recovery. The RPM row in Table 1
+   is measured, not copied from a web page.
 3. *"Every answer must cite where in the papers it came from. If the papers do not say,
    the assistant must say so instead of guessing."* This produced the citation contract,
    the evidence gate, and the 23-question evaluation; the real run (58,791 tokens in,
@@ -282,8 +283,8 @@ deterministic by default with the LLM verifier behind `verification_mode`. The e
 measurable — "what is the capital of france?" costs 0 model calls and 0 tokens — and a
 second call would have roughly doubled tokens per answer on an 8k-TPM budget.
 
-**What is distinctly mine.** The goal ordering (cost first, then quality, with
-availability stated plainly instead of promised), the five load shapes and their
+**What is distinctly mine.** The goal ordering (quality first, then speed, with cost and
+availability the two I chose to trade away), the five load shapes and their
 parameters, the 23 questions and the 13/10 deterministic-versus-LLM split, the three
 retrieval presets, the 120 s real-run deadline, and the decision to publish measured
 limits rather than documented ones. The assistant wrote most of the code to those
